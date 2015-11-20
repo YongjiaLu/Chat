@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary_lv5">#0039b3</color>
+    <color name="colorPrimary_lv4">#4F7FE8</color>
+    <color name="colorPrimary_lv3">#6892ED</color>
+    <color name="colorPrimary_lv2">#97B7FC</color>
+    <color name="colorPrimary_lv1">#BED0F7</color>
+    <color name="colorAccent">#FF4082</color>
+
+
+</resources>
