@@ -8,9 +8,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 
-import com.lu.xmpp.chat.ChatConnectAvailableCallBack;
-import com.lu.xmpp.chat.ChatNetWorkAvailableCallBack;
-import com.lu.xmpp.chat.ChatRegisterCallBack;
+import com.lu.xmpp.chat.ChatConnectCallBack;
 import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.contacts.ChatContacts;
 import com.lu.xmpp.utils.Log;
@@ -22,8 +20,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 由Chat类调用，其他地方一律通过Chat类来通信获取数据
@@ -59,12 +55,12 @@ public class ChatService extends Service {
     private final static String Tag = "ChatService";
 
     private static ChatService mInstance;
-    //连接实例，一般一个客户端只有一个
+    //XmppConnection Instance
     private ChatConnection connection;
-    //Error Stack
-    private List<Exception> errorStack = new ArrayList<>();
-    //CallBack
-    private CallbackManager mCallbackManager = new CallbackManager();
+    //Connect Manager
+    private ChatConnectManager mChatConnectManager = ChatConnectManager.getInstance();
+    //Register Manager
+    private ChatRegisterManager mChatRegisterManager = ChatRegisterManager.getInstance();
     //Friends Observer
     private FriendsObserver mFriendsObserver;
 
@@ -169,21 +165,16 @@ public class ChatService extends Service {
                         //连接
                         Log.e(Tag, "start connect");
                         connection.connect();
-                        if (connection.isConnected() && connection.isSecureConnection()) {
-                            Log.e(Tag, "connect success");
-                            mCallbackManager.executeConnectCallback(true, null);
-                        }
                     } else {
-                        Log.e(Tag, "connect fault");
-                        handleConnectError(new Exception("No Connect"));
+
                     }
                     Log.e(Tag, "connect complete");
                 } catch (XMPPException e) {
-                    handleConnectError(e);
+
                 } catch (SmackException e) {
-                    e.printStackTrace();
+
                 } catch (IOException e) {
-                    e.printStackTrace();
+
                 }
             }
         }).start();
@@ -201,19 +192,18 @@ public class ChatService extends Service {
                     connection.login(username, password);
 
                     if (connection.isAuthenticated()) {
-//                        mCallbackManager.executeLoginCallBack(true, null);
                         //when login successful ,FriendsObserver start
                         mFriendsObserver = new FriendsObserver(connection, mInstance);
                         mFriendsObserver.init();
                     } else {
-                        handleConnectError(new Exception("username or password error"));
+                        handleLoginError(new Exception("username or password error"));
                     }
                 } catch (XMPPException e) {
-//                    handleLoginError(e);
+                    handleLoginError(e);
                 } catch (SmackException e) {
-//                    handleLoginError(e);
+                    handleLoginError(e);
                 } catch (IOException e) {
-//                    handleLoginError(e);
+                    handleLoginError(e);
                 }
             }
         }).start();
@@ -223,17 +213,9 @@ public class ChatService extends Service {
         return connection.isAuthenticated();
     }
 
-
-    private void handleConnectError(Exception e) {
-        e.printStackTrace();
-        errorStack.add(e);
-        mCallbackManager.executeConnectCallback(false, e);
-    }
-
     private void handlerRegisterError(Exception e) {
         e.printStackTrace();
-        errorStack.add(e);
-        mCallbackManager.executeRegisterCallBack(false, e.toString());
+        mChatRegisterManager.executeCallbacks(false, e);
     }
 
 
@@ -246,14 +228,6 @@ public class ChatService extends Service {
         return connection.isConnected();
     }
 
-    /**
-     * 显示异常堆栈 Debug模式下有效
-     */
-    public void getErrorStack() {
-        for (Exception e : errorStack) {
-            e.printStackTrace();
-        }
-    }
     //<=========================================================================================>
     //<====================================  register  =========================================>
     //<=========================================================================================>
@@ -274,7 +248,7 @@ public class ChatService extends Service {
 
                         manager.createAccount(username, password);
                         //manager.createAccount(username, password);
-                        mCallbackManager.executeRegisterCallBack(true, null);
+                        mChatRegisterManager.executeCallbacks(true, null);
                     }
                 } catch (SmackException.NoResponseException e) {
                     handlerRegisterError(e);
@@ -293,50 +267,37 @@ public class ChatService extends Service {
     //<================================  connect callback  =====================================>
     //<=========================================================================================>
 
-    public void registerConnectCallback(ChatConnectAvailableCallBack callback) {
-        mCallbackManager.addConnectAvailableCallBack(callback);
+    public void addConnectCallBack(ChatConnectCallBack callBack) {
+        mChatConnectManager.addChatConnectCallBack(callBack);
+        connection.addConnectionListener(callBack);
+
     }
 
-    public void unregisterConnectCallback(ChatConnectAvailableCallBack callback) {
-        mCallbackManager.removeConnectAvailableCallBack(callback);
+    public void removeConnectCallBack(ChatConnectCallBack callBack) {
+        mChatConnectManager.removeChatConnectCallBack(callBack);
+        connection.removeConnectionListener(callBack);
     }
 
-
-    //<=========================================================================================>
-    //<================================= net work callback =====================================>
-    //<=========================================================================================>
-
-    /**
-     * 网络状态发生改变
-     */
     BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (NetUtil.isNetWorkAvaliable(context)) {
-                mCallbackManager.executeNetworkCallback(true);
+                mChatConnectManager.executeNetworkAvaliable(true);
             } else {
-                mCallbackManager.executeNetworkCallback(false);
+                mChatConnectManager.executeNetworkAvaliable(false);
             }
         }
     };
 
-    public void registerNetworkAvailableCallBack(ChatNetWorkAvailableCallBack callBack) {
-        mCallbackManager.addNetworkAvailableCallBack(callBack);
-    }
-
-    public void unRegisterNetworkAvailableCallBack(ChatNetWorkAvailableCallBack callBack) {
-        mCallbackManager.removeNetworkAvailableCallBack(callBack);
-    }
-
     //<=========================================================================================>
     //<================================  register callback  ====================================>
     //<=========================================================================================>
-    public void registerRegisterCallBack(ChatRegisterCallBack callBack) {
-        mCallbackManager.addRegisterCallback(callBack);
+    public void registerRegisterCallBack(ChatRegisterManager.ChatRegisterCallBack callBack) {
+        mChatRegisterManager.addChatRegiserCallBack(callBack);
     }
 
-    public void unRegisterCallBack(ChatRegisterCallBack callBack) {
-        mCallbackManager.removeRegisterCallback(callBack);
+    public void unRegisterCallBack(ChatRegisterManager.ChatRegisterCallBack callBack) {
+        mChatRegisterManager.removeChatConnectCallBack(callBack);
     }
 
     //<=========================================================================================>
@@ -360,12 +321,13 @@ public class ChatService extends Service {
             connection.connect();
             this.connection = connection;
         } catch (SmackException e1) {
+
         } catch (IOException e1) {
+
         } catch (XMPPException e1) {
+
         }
         e.printStackTrace();
-        errorStack.add(e);
-       // mCallbackManager.executeLoginCallBack(false, e.toString());
     }
 
 }

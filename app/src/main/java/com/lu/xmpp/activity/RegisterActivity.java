@@ -9,14 +9,14 @@ import android.widget.Button;
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
 import com.lu.xmpp.chat.ConnectControl;
-import com.lu.xmpp.chat.ChatRegisterCallBack;
+import com.lu.xmpp.chat.service.ChatRegisterManager;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 
 /**
  * 注册页面
  */
-public class RegisterActivity extends BaseActivity implements View.OnClickListener, ChatRegisterCallBack {
+public class RegisterActivity extends BaseActivity implements View.OnClickListener,ChatRegisterManager. ChatRegisterCallBack {
 
     private MaterialEditText editUsername;
     private MaterialEditText editPassword;

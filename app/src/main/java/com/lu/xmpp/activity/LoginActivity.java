@@ -11,16 +11,14 @@ import android.widget.Button;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
-import com.lu.xmpp.chat.ChatConnectAvailableCallBack;
-import com.lu.xmpp.chat.ChatNetWorkAvailableCallBack;
+import com.lu.xmpp.chat.ChatConnectCallBack;
 import com.lu.xmpp.chat.ConnectControl;
 import com.lu.xmpp.utils.Log;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
-import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.XMPPConnection;
 
-public class LoginActivity extends BaseActivity implements View.OnClickListener, ChatConnectAvailableCallBack, ConnectionListener, ChatNetWorkAvailableCallBack {
+public class LoginActivity extends BaseActivity implements View.OnClickListener, ChatConnectCallBack {
     private static final String Tag = "LoginActivity";
 
     private Button btnLogin;
@@ -37,6 +35,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         view = LayoutInflater.from(this).inflate(R.layout.activity_login, null);
+        connectControl.isConnected();
         setContentView(view);
         initUI();
     }
@@ -62,12 +61,13 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
     @Override
     protected void onResume() {
         super.onResume();
-        connectControl.registerConnectObserter(this);
-        connectControl.registerNetworkObserver(this);
         initStatus();
+
     }
 
     private void initStatus() {
+        connectControl.addConnectCallBack(this);
+
         if (connectControl.isConnected()) {
             setBtnEnable(true);
         } else {
@@ -84,10 +84,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     protected void onPause() {
-        connectControl.unregisterNetworkObserver(this);
-        connectControl.unregisterConnectObserter(this);
-        connectControl.unRegisterLoginCallback(this);
-        connectControl.unRegisterContext(this);
+        connectControl.addConnectCallBack(this);
         super.onPause();
     }
 
@@ -113,11 +110,6 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
     /**
      * Called when a view has been clicked.
      *
@@ -127,7 +119,6 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_login:
-                connectControl.registerLoginCallBack(this);
                 login();
                 break;
             case R.id.btn_register:
@@ -139,40 +130,16 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
 
 
     private void login() {
-
         String username = editUserName.getText().toString();
         String password = editPassword.getText().toString();
-
         connectControl.login(username, password, this);
     }
 
-    //<==================================================================================>
-    //<================================   call backs   ==================================>
-    //<==================================================================================>
-
 
     private Snackbar snackbar;
-
-    @Override
-    public void success() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!btnLogin.isEnabled()) {
-                    setBtnEnable(true);
-                }
-                if (null != snackbar && snackbar.isShown()) {
-                    snackbar.dismiss();
-                }
-            }
-        });
-
-    }
-
-    @Override
-    public void fault(Exception e) {
-
-    }
+    //<==================================================================================>
+    //<============================== ConnectionListener ================================>
+    //<==================================================================================>
 
 
     /**
@@ -186,13 +153,14 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
      */
     @Override
     public void connected(XMPPConnection connection) {
-
+        Log.e(Tag, "hello world");
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                setBtnEnable(true);
+            }
+        });
     }
-
-
-    //<==================================================================================>
-    //<============================== ConnectionListener ================================>
-    //<==================================================================================>
 
     /**
      * Notification that the connection has been authenticated.
@@ -229,8 +197,6 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
      */
     @Override
     public void connectionClosedOnError(Exception e) {
-        Log.e(Tag,"connectionClosedOnError");
-
         e.printStackTrace();
         handler.post(new Runnable() {
             @Override
@@ -255,42 +221,19 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
      */
     @Override
     public void reconnectionSuccessful() {
-
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-                LoginActivity.this.finish();
+                setBtnEnable(true);
             }
         });
-
     }
 
-    /**
-     * The connection will retry to reconnect in the specified number of seconds.
-     * <p>
-     * Note: This method is only called if {@link ReconnectionManager#isAutomaticReconnectEnabled()} returns true, i.e.
-     * only when the reconnection manager is enabled for the connection.
-     * </p>
-     *
-     * @param seconds remaining seconds before attempting a reconnection.
-     */
     @Override
     public void reconnectingIn(int seconds) {
 
     }
 
-    /**
-     * An attempt to connect to the server has failed. The connection will keep trying reconnecting to the server in a
-     * moment.
-     * <p>
-     * Note: This method is only called if {@link ReconnectionManager#isAutomaticReconnectEnabled()} returns true, i.e.
-     * only when the reconnection manager is enabled for the connection.
-     * </p>
-     *
-     * @param e the exception that caused the reconnection to fail.
-     */
     @Override
     public void reconnectionFailed(Exception e) {
         handler.post(new Runnable() {
@@ -312,19 +255,16 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onNetworkAble() {
-
         handler.post(new Runnable() {
             @Override
             public void run() {
                 setBtnEnable(true);
             }
         });
-
     }
 
     @Override
     public void onNetworkDisable() {
-
         handler.post(new Runnable() {
             @Override
             public void run() {

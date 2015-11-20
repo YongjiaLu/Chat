@@ -269,7 +269,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
      *
      * @param presence
      */
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public void showPresence(Presence presence) {
         if (debug) {

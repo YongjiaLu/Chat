@@ -20,6 +20,7 @@ import com.lu.xmpp.activity.fragment.ColorTestFragment;
 import com.lu.xmpp.activity.fragment.RosterFragment;
 import com.lu.xmpp.adapter.FriendListAdapt;
 import com.lu.xmpp.adapter.MainActivityFragmentAdapt;
+import com.lu.xmpp.async.GetFriendsAsync;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
@@ -71,7 +72,7 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
         viewpager.setAdapter(adapt);
         tabLayout.setTabsFromPagerAdapter(adapt);
         tabLayout.setupWithViewPager(viewpager);
-
+        GetFriendsAsync.getInstance().startTask(this);
     }
 
     @Override
@@ -81,6 +82,8 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
 
     @Override
     public void onGetFriends(final List<Friend> data) {
+
+        Log.e(Tag,String.valueOf(data.size()));
 
         for (int i = 1; i < 100; i++) {
             data.add(data.get(i % 2));
