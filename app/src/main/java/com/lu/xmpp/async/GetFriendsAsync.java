@@ -73,7 +73,7 @@ public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
 
         Intent intent = new Intent(service, ChatService.class);
 
-        intent.setAction(service.Action_Start_Get_Friends);
+        intent.setAction(service.ActionStartGetFriends);
 
         service.startService(intent);
 
@@ -106,7 +106,7 @@ public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
     private BroadcastReceiver MyFriendsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            friends = intent.getParcelableArrayListExtra(service.Param_FriendList);
+            friends = intent.getParcelableArrayListExtra(service.ParamFriendList);
             isRunning = false;
         }
     };

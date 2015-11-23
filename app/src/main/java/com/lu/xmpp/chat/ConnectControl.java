@@ -38,7 +38,7 @@ public class ConnectControl {
     public void connect(Context context) {
         if (!service.isConnected()) {
             Intent intent = new Intent(context, ChatService.class);
-            intent.setAction(service.Action_Connect);
+            intent.setAction(service.ActionConnect);
             context.startService(intent);
         }
     }
@@ -72,9 +72,9 @@ public class ConnectControl {
 
     public void register(String username, String password, Context context) {
         Intent intent = new Intent(context, ChatService.class);
-        intent.setAction(service.Action_Register);
-        intent.putExtra(service.Param_UserName, username);
-        intent.putExtra(service.Param_PassWord, password);
+        intent.setAction(service.ActionRegister);
+        intent.putExtra(service.ParamUserName, username);
+        intent.putExtra(service.ParamPassword, password);
         context.startService(intent);
     }
 
@@ -83,9 +83,9 @@ public class ConnectControl {
      */
     public void login(String username, String password, Context context) {
         Intent intent = new Intent(context, ChatService.class);
-        intent.setAction(service.Action_Login);
-        intent.putExtra(service.Param_UserName, username);
-        intent.putExtra(service.Param_PassWord, password);
+        intent.setAction(service.ActionLogin);
+        intent.putExtra(service.ParamUserName, username);
+        intent.putExtra(service.ParamPassword, password);
         context.startService(intent);
     }
 

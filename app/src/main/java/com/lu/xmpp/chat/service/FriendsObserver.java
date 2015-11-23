@@ -11,7 +11,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
@@ -177,8 +176,8 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
         List<Friend> list = parseRosterToFriend(roster);
 
         Intent intent = new Intent(mService, ChatService.class);
-        intent.setAction(mService.Action_On_Receiver_Friends);
-        intent.putParcelableArrayListExtra(mService.Param_FriendList, (ArrayList<? extends Parcelable>) list);
+        intent.setAction(mService.ActionOnReceiverFriends);
+        intent.putParcelableArrayListExtra(mService.ParamFriendList, (ArrayList<? extends Parcelable>) list);
         mService.startService(intent);
 
         finish();

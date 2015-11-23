@@ -83,11 +83,7 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
     @Override
     public void onGetFriends(final List<Friend> data) {
 
-        Log.e(Tag,String.valueOf(data.size()));
-
-        for (int i = 1; i < 100; i++) {
-            data.add(data.get(i % 2));
-        }
+        Log.e(Tag, String.valueOf(data.size()));
 
         handler.post(new Runnable() {
             @Override

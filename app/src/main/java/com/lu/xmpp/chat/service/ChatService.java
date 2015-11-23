@@ -24,9 +24,6 @@ import java.io.IOException;
 /**
  * 由Chat类调用，其他地方一律通过Chat类来通信获取数据
  * <br/>
- * 后期需要管理消息堆栈，先预留
- * <br/>
- * 启动优先级最高
  */
 public class ChatService extends Service {
 
@@ -34,18 +31,18 @@ public class ChatService extends Service {
 
     //Action
     //<===========================================================>
-    public final String Action_Connect = "chat.service.connect";
-    public final String Action_Login = "chat.service.login";
-    public final String Action_Register = "chat.service.register";
-    public final String Action_Start_Get_Friends = "chat.service.start_get_friends";
-    public final String Action_On_Receiver_Friends = "chat.service.on_receiver_Friends";
+    public final String ActionConnect = "chat.service.connect";
+    public final String ActionLogin = "chat.service.login";
+    public final String ActionRegister = "chat.service.register";
+    public final String ActionStartGetFriends = "chat.service.start_get_friends";
+    public final String ActionOnReceiverFriends = "chat.service.on_receiver_Friends";
     //<===========================================================>
 
     //Param
     //<===========================================================>
-    public final String Param_FriendList = "friends";
-    public final String Param_UserName = "username";
-    public final String Param_PassWord = "password";
+    public final String ParamFriendList = "friends";
+    public final String ParamUserName = "username";
+    public final String ParamPassword = "password";
     //<===========================================================>
 
     //BroadCastReceiver Action
@@ -88,37 +85,37 @@ public class ChatService extends Service {
         if (intent != null && intent.getAction() != null) {
             Log.e(Tag, intent.getAction());
             switch (intent.getAction()) {
-                case Action_Connect: {
+                case ActionConnect: {
                     //创建连接
                     connect();
                 }
                 break;
-                case Action_Login: {
+                case ActionLogin: {
                     //登陆
-                    String username = intent.getStringExtra(Param_UserName);
-                    String password = intent.getStringExtra(Param_PassWord);
+                    String username = intent.getStringExtra(ParamUserName);
+                    String password = intent.getStringExtra(ParamPassword);
                     login(username, password);
                 }
                 break;
-                case Action_Register: {
+                case ActionRegister: {
                     //注册
-                    String username = intent.getStringExtra(Param_UserName);
-                    String password = intent.getStringExtra(Param_PassWord);
+                    String username = intent.getStringExtra(ParamUserName);
+                    String password = intent.getStringExtra(ParamPassword);
                     register(username, password);
                 }
                 break;
-                case Action_Start_Get_Friends: {
+                case ActionStartGetFriends: {
                     //开始一个获取Roster的任务
                     mFriendsObserver = new FriendsObserver(connection, this);
                     mFriendsObserver.init();
                 }
                 break;
 
-                case Action_On_Receiver_Friends: {
+                case ActionOnReceiverFriends: {
                     //收到FriendsObserver处理好的好友列表，通过广播转发
                     Intent broadcast = new Intent();
                     broadcast.setAction(BroadCast_Action_On_Receiver_Friends);
-                    broadcast.putExtra(Param_FriendList, intent.getParcelableArrayListExtra(Param_FriendList));
+                    broadcast.putExtra(ParamFriendList, intent.getParcelableArrayListExtra(ParamFriendList));
                     sendBroadcast(broadcast);
                     if (mFriendsObserver == null) {
                         mFriendsObserver = new FriendsObserver(connection, this);
