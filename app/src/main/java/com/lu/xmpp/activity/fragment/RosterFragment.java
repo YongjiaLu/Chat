@@ -19,7 +19,9 @@ import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by xuyu on 2015/11/17.
@@ -62,10 +64,9 @@ public class RosterFragment extends BaseFragment {
     /**
      * just change the UI,this method will run in main thread
      *
-     * @param friends
+     * @param friends what you want to show
      */
     public void showFriendList(List<Friend> friends) {
-        this.friends = friends;
         if (mRecyclerView == null) return;
         FriendListAdapt adapt = new FriendListAdapt(friends);
         mRecyclerView.setAdapter(adapt);

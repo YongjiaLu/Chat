@@ -18,11 +18,10 @@ public class ChatControl {
 
     private static ChatControl mInstance = new ChatControl();
 
-    private static ChatService service;
-
-    private Context context;
+    private static ChatService service= ChatService.getInstance();
 
     private ChatControl() {
+
     }
 
     public static ChatControl getInstance() {

@@ -1,33 +1,59 @@
 package com.lu.xmpp.adapter;
 
-import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.lu.xmpp.R;
+import com.lu.xmpp.adapter.viewholder.FriendListCardView;
 import com.lu.xmpp.modle.Friend;
 
+import org.jivesoftware.smack.packet.Presence;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by xuyu on 2015/11/18.
  */
-public class FriendListAdapt extends RecyclerView.Adapter<MyViewHolder> {
+public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
 
-    private List<Friend> friends;
+    public static final int TypeGroupName = 1;
+    public static final int TypeFriend = 2;
+
+    private List friends;
 
     public FriendListAdapt(List<Friend> friends) {
-        this.friends = friends;
+        this.friends = handleData(friends);
+    }
+
+    private List<Friend> handleData(List<Friend> friends) {
+        Map<String, List<Friend>> map = new HashMap<>();
+        for (Friend friend : friends) {
+            if (!map.containsKey(friend.getGroupName()))
+                map.put(friend.getGroupName(), new ArrayList<Friend>());
+            map.get(friend.getGroupName()).add(friend);
+        }
+        Set<Map.Entry<String, List<Friend>>> entrySet = map.entrySet();
+        List list = new ArrayList();
+        for (Map.Entry entry : entrySet) {
+            list.add(entry.getKey().toString());
+            List<Friend> group = (List<Friend>) entry.getValue();
+            for (Friend friend : group) {
+                list.add(friend);
+            }
+        }
+        return list;
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public FriendListCardView onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_roster, parent, false);
-        MyViewHolder viewHolder = new MyViewHolder(view);
+        FriendListCardView viewHolder = new FriendListCardView(view);
         return viewHolder;
     }
 
@@ -37,32 +63,24 @@ public class FriendListAdapt extends RecyclerView.Adapter<MyViewHolder> {
         return friends.size();
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        String string = friends.get(position).getClass().getSimpleName();
+        return string.equals(Friend.class.getSimpleName()) ? TypeFriend : TypeGroupName;
+    }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
-        Friend friend = friends.get(position);
-        holder.setTvUserName(friend.getUsername());
-        holder.setAvator(friend.getAvatar());
+    public void onBindViewHolder(FriendListCardView holder, int position) {
+
+        int type = getItemViewType(position);
+        if (type == TypeFriend) {
+            Friend friend = (Friend) friends.get(position);
+            holder.setFriendCard(friend.getUsername(), friend.getAvatar(), friend.getStatus().equals(Presence.Type.available.toString()) ? "online" : "offline");
+        } else {
+            String string = friends.get(position).toString();
+            holder.setTitle(string);
+        }
     }
 
 }
 
-class MyViewHolder extends RecyclerView.ViewHolder {
-    private TextView tvUserName;
-    private ImageView ivAvator;
-
-
-    public MyViewHolder(View itemView) {
-        super(itemView);
-        tvUserName = (TextView) itemView.findViewById(R.id.tv_username);
-        ivAvator = (ImageView) itemView.findViewById(R.id.image_view);
-    }
-
-    public void setTvUserName(String name) {
-        tvUserName.setText(name);
-    }
-
-    public void setAvator(Bitmap bitmap) {
-        ivAvator.setImageBitmap(bitmap);
-    }
-}

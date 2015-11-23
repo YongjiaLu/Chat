@@ -14,9 +14,7 @@ public class Friend implements Parcelable {
     private String status;
     private String statusLine;
 
-
     public Friend() {
-
     }
 
     protected Friend(Parcel in) {
@@ -25,6 +23,7 @@ public class Friend implements Parcelable {
         Avatar = in.readParcelable(Bitmap.class.getClassLoader());
         status = in.readString();
         statusLine = in.readString();
+        groupName = in.readString();
     }
 
     public static final Creator<Friend> CREATOR = new Creator<Friend>() {
@@ -38,6 +37,17 @@ public class Friend implements Parcelable {
             return new Friend[size];
         }
     };
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    private String groupName;
+
 
     public String getStatus() {
         return status;
@@ -79,6 +89,7 @@ public class Friend implements Parcelable {
         Avatar = avatar;
     }
 
+
     /**
      * Describe the kinds of special objects contained in this Parcelable's
      * marshalled representation.
@@ -105,5 +116,6 @@ public class Friend implements Parcelable {
         dest.writeParcelable(Avatar, flags);
         dest.writeString(status);
         dest.writeString(statusLine);
+        dest.writeString(groupName);
     }
 }

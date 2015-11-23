@@ -13,6 +13,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.roster.RosterLoadedListener;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
@@ -20,6 +21,8 @@ import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -102,7 +105,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
             Friend friend = parseRosterToFriend(entry, roster);
             if (null != friend) {
                 for (Friend f : friends) {
-                    if (f.getJid() == friend.getJid()) {
+                    if (f.getJid() .equals(friend.getJid()) ) {
                         friends.remove(f);
                         friends.add(friend);
                     }
@@ -125,7 +128,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
 
         for (String jid : addresses) {
             for (Friend friend : friends) {
-                if (jid == friend.getJid()) {
+                if (jid .equals(friend.getJid())) {
                     friends.remove(friend);
                 }
             }
@@ -174,7 +177,6 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
     public void onRosterLoaded(Roster roster) {
 
         List<Friend> list = parseRosterToFriend(roster);
-
         Intent intent = new Intent(mService, ChatService.class);
         intent.setAction(mService.ActionOnReceiverFriends);
         intent.putParcelableArrayListExtra(mService.ParamFriendList, (ArrayList<? extends Parcelable>) list);
@@ -191,18 +193,46 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
             return null;
         }
 
-        friends = new ArrayList<>();
-        Set<RosterEntry> rosterEntries = roster.getEntries();
-        for (RosterEntry entry : rosterEntries) {
-            Friend friend = parseRosterToFriend(entry, roster);
-            if (null != friend) {
-                friends.add(friend);
+        friends.clear();
+
+        List<String> ids = new ArrayList<>();
+
+        Collection<RosterGroup> list = roster.getGroups();
+
+        for (RosterGroup group : list) {
+            Log.e(Tag, "GroupName=" + group.getName());
+            Log.e(Tag, "Group" + group.getEntries());
+            for (RosterEntry entry : group.getEntries()) {
+                friends.add(parseRosterToFriend(entry, roster, group.getName()));
+                ids.add(entry.getUser());
             }
         }
+
+        for (RosterEntry entry : roster.getEntries()) {
+            if (!ids.contains(entry.getUser())) {
+                friends.add(parseRosterToFriend(entry, roster));
+                ids.add(entry.getUser());
+            }
+        }
+        //Create a Sorter,online friend will be top.
+        Collections.sort(friends, new Comparator<Friend>() {
+            @Override
+            public int compare(Friend lhs, Friend rhs) {
+                if (lhs.getStatus().equals(Presence.Type.available.toString()) && !rhs.getStatus().equals(Presence.Type.available.toString()))
+                    return 5;
+                return lhs.getUsername().compareTo(rhs.getUsername()) > 0 ? 1 : -1;
+            }
+        });
+
         return friends;
     }
 
     public Friend parseRosterToFriend(RosterEntry entry, Roster roster) {
+        return parseRosterToFriend(entry, roster, "Friends");
+    }
+
+
+    public Friend parseRosterToFriend(RosterEntry entry, Roster roster, String Group) {
         Friend friend = null;
         try {
             friend = new Friend();
@@ -213,12 +243,18 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
             //From Presence
             friend.setStatus(presence.getType().toString());
             friend.setStatusLine(presence.getStatus());
-
-            showPresence(presence);
+            if (debug) {
+                Log.e(Tag, "---------------------------------------------");
+                showEntry(entry);
+                showPresence(presence);
+                Log.e(Tag, "---------------------------------------------");
+            }
             //From VCard
             friend.setJid(entry.getUser());
             friend.setAvatar(BitmapUtils.parseByteArrayToBitmap(vCard.getAvatar(), mService));
-            friend.setUsername(vCard.getNickName());
+            friend.setUsername(vCard.getNickName() != null ? vCard.getNickName() : entry.getUser().split("@")[0]);
+
+            friend.setGroupName(Group);
         } catch (SmackException.NoResponseException e) {
             handError(e);
         } catch (XMPPException.XMPPErrorException e) {
@@ -242,7 +278,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
     private boolean rosterPresenceFlag = false;
 
     public synchronized void startRosterPresenceListener() throws Exception {
-        if (rosterPresenceFlag == false && mRoster != null) {
+        if (! rosterPresenceFlag   && mRoster != null) {
 
             if (registerCount == 1) throw new Exception("this method had call");
 
@@ -255,7 +291,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
     }
 
     public synchronized void stopRosterPresenceListener() {
-        if (rosterPresenceFlag == true && mRoster != null) {
+        if (rosterPresenceFlag  && mRoster != null) {
             Log.e(Tag, "stop a presence listener ,Register Counter=" + --registerCount);
             mRoster.removeRosterListener(this);
             rosterPresenceFlag = false;
@@ -268,17 +304,24 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
      *
      * @param presence
      */
-    public static boolean debug = true;
+    public static boolean debug = false;
+
+    public void showEntry(RosterEntry entry) {
+        if (debug) {
+            Log.e(Tag, "RosterEntry.User=" + entry.getUser());
+            Log.e(Tag, "RosterEntry.States=" + entry.getStatus());
+            Log.e(Tag, "RosterEntry.Type=" + entry.getType());
+            Log.e(Tag, "RosterEntry.Name=" + entry.getName());
+        }
+    }
 
     public void showPresence(Presence presence) {
         if (debug) {
-            Log.e(Tag, "---------------------------------------------");
-            Log.e(Tag, "User=" + presence.getFrom());
-            Log.e(Tag, "States=" + presence.getStatus());
-            Log.e(Tag, "Type=" + presence.getType());
-            Log.e(Tag, "isAvailable=" + presence.isAvailable());
-            Log.e(Tag, "Mode=" + presence.getMode());
-            Log.e(Tag, "---------------------------------------------");
+            Log.e(Tag, "Presence.User=" + presence.getFrom());
+            Log.e(Tag, "Presence.States=" + presence.getStatus());
+            Log.e(Tag, "Presence.Type=" + presence.getType());
+            Log.e(Tag, "Presence.isAvailable=" + presence.isAvailable());
+            Log.e(Tag, "Presence.Mode=" + presence.getMode());
         }
     }
 

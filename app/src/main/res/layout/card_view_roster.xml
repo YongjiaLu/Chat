@@ -9,9 +9,8 @@
         android:id="@+id/image_view"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginRight="4dp"
+        android:layout_marginLeft="4dp"
         android:src="@mipmap/ic_launcher" />
 
     <TextView
@@ -20,9 +19,20 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginRight="64dp"
         android:text="UserName"
         android:textSize="24sp"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/tv_online_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_username"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="2dp"
+        android:text="Online"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 </RelativeLayout>

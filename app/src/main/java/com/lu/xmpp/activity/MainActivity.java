@@ -58,7 +58,11 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
         setSupportActionBar(toolbar);
 
         initUI();
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        try {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        } catch (NullPointerException e) {
+            Log.e(Tag, "Hello World ~");
+        }
     }
 
     private void initUI() {
@@ -72,7 +76,7 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
         viewpager.setAdapter(adapt);
         tabLayout.setTabsFromPagerAdapter(adapt);
         tabLayout.setupWithViewPager(viewpager);
-        GetFriendsAsync.getInstance().startTask(this);
+        mChatControl.getFriends(this);
     }
 
     @Override
