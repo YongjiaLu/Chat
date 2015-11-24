@@ -14,7 +14,9 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.lu.xmpp.R;
+import com.lu.xmpp.activity.base.BaseActivity;
 import com.lu.xmpp.adapter.FriendListAdapt;
+import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 
@@ -26,13 +28,17 @@ import java.util.Map;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class RosterFragment extends BaseFragment {
+public class RosterFragment extends BaseFragment implements ChatControl.FriendStatusListener {
 
     private static String Tag = "RosterFragment";
 
     private RecyclerView mRecyclerView;
 
     private List<Friend> friends = new ArrayList<>();
+
+    public RosterFragment(BaseActivity activity) {
+        super(activity);
+    }
 
 
     @Nullable
@@ -55,10 +61,19 @@ public class RosterFragment extends BaseFragment {
 
     @Override
     public void onResume() {
+        Log.e(Tag, "onResume");
         super.onResume();
         if (friends != null && friends.size() != 0) {
             showFriendList(friends);
         }
+        ChatControl.getInstance().addFriendStatusListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        Log.e(Tag, "onPause");
+        ChatControl.getInstance().removeFriendStatusListener(this);
+        super.onPause();
     }
 
     /**
@@ -75,5 +90,44 @@ public class RosterFragment extends BaseFragment {
     @Override
     public String getTitle() {
         return "Friend";
+    }
+
+    /**
+     * On Friend Status Change when a friend available/unavailable.
+     *
+     * @param friends friend collection
+     * @param friend  which one changed
+     */
+    @Override
+    public void onFriendsStatusChanged(List<Friend> friends, Friend friend) {
+        this.friends = friends;
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                showFriendList(RosterFragment.this.friends);
+            }
+        });
+    }
+
+    /**
+     * A new friend want to add , there will be child thread
+     *
+     * @param friends friend collection
+     * @param friend  which one ask for notice
+     */
+    @Override
+    public void onNewFriendAddNotice(List<Friend> friends, Friend friend) {
+
+    }
+
+    /**
+     * A friend delete our account
+     *
+     * @param friends friend collection
+     * @param friend  which one delete you from his friend list
+     */
+    @Override
+    public void onFriendDeleteNotice(List<Friend> friends, Friend friend) {
+
     }
 }

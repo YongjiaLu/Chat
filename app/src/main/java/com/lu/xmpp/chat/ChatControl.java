@@ -1,8 +1,6 @@
 package com.lu.xmpp.chat;
 
-import android.content.Context;
-
-import com.lu.xmpp.async.GetFriendsAsync;
+import com.lu.xmpp.chat.async.GetFriendsAsync;
 import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
@@ -18,7 +16,8 @@ public class ChatControl {
 
     private static ChatControl mInstance = new ChatControl();
 
-    private static ChatService service= ChatService.getInstance();
+    private static ChatService service = ChatService.getInstance();
+
 
     private ChatControl() {
 
@@ -29,22 +28,61 @@ public class ChatControl {
         return mInstance;
     }
 
+    public void addFriendStatusListener(FriendStatusListener listener) {
+        service.addFriendStatusListener(listener);
+    }
+
+    public void removeFriendStatusListener(FriendStatusListener listener) {
+        service.removeFriendStatusListener(listener);
+    }
+
     /**
      * 当获取好友任务处理完成时，将触发接口回调
      *
      * @param listener
      */
     public void getFriends(GetFriendListener listener) {
-        Log.e(Tag,"getFriends(GetFriendListener listener)");
+        Log.e(Tag, "getFriends(GetFriendListener listener)");
         GetFriendsAsync async = GetFriendsAsync.getInstance();
         async.startTask(listener);
     }
 
-    /**
-     * it will be run in child thread!<br />
-     * please use mhandler.post(Runanle runable) back to main thread!
-     */
     public interface GetFriendListener {
+        /**
+         * it will be run in child thread!<br />
+         * please use mhandler.post(Runanle runable) back to main thread!
+         */
         void onGetFriends(List<Friend> friends);
     }
+
+    /**
+     * Friend Listener
+     */
+    public interface FriendStatusListener {
+        /**
+         * On Friend Status Change when a friend available/unavailable.
+         *
+         * @param friends friend collection
+         * @param friend  which one changed
+         */
+        void onFriendsStatusChanged(List<Friend> friends, Friend friend);
+
+        /**
+         * A new friend want to add , there will be child thread
+         *
+         * @param friends friend collection
+         * @param friend  which one ask for notice
+         */
+        void onNewFriendAddNotice(List<Friend> friends, Friend friend);
+
+        /**
+         * A friend delete our account
+         *
+         * @param friends friend collection
+         * @param friend  which one delete you from his friend list
+         */
+        void onFriendDeleteNotice(List<Friend> friends, Friend friend);
+    }
+
+
 }

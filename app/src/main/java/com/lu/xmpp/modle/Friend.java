@@ -5,7 +5,11 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by xuyu on 2015/11/17.
+ * String username; 用户名<br />
+ * String Jid;唯一标识<br />
+ * Bitmap Avatar;头像<br />
+ * String status;状态<br />
+ * String statusLine 自定义状态信息<br />
  */
 public class Friend implements Parcelable {
     private String username;

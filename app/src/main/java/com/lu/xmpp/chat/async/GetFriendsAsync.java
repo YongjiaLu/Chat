@@ -1,4 +1,4 @@
-package com.lu.xmpp.async;
+package com.lu.xmpp.chat.async;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

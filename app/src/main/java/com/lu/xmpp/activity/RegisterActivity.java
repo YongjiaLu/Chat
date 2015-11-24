@@ -29,6 +29,7 @@ public class RegisterActivity extends BaseActivity implements View.OnClickListen
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         view = LayoutInflater.from(this).inflate(R.layout.activity_register, null);

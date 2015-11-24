@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.os.IBinder;
 
 import com.lu.xmpp.chat.ChatConnectCallBack;
+import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.contacts.ChatContacts;
 import com.lu.xmpp.utils.Log;
@@ -106,7 +107,7 @@ public class ChatService extends Service {
                 break;
                 case ActionStartGetFriends: {
                     //开始一个获取Roster的任务
-                    mFriendsObserver = new FriendsObserver(connection, this);
+                    mFriendsObserver = FriendsObserver.getInstance(connection, this);
                     mFriendsObserver.init();
                 }
                 break;
@@ -118,7 +119,7 @@ public class ChatService extends Service {
                     broadcast.putExtra(ParamFriendList, intent.getParcelableArrayListExtra(ParamFriendList));
                     sendBroadcast(broadcast);
                     if (mFriendsObserver == null) {
-                        mFriendsObserver = new FriendsObserver(connection, this);
+                        mFriendsObserver = FriendsObserver.getInstance(connection, this);
                     }
                     try {
                         mFriendsObserver.startRosterPresenceListener();
@@ -190,7 +191,7 @@ public class ChatService extends Service {
 
                     if (connection.isAuthenticated()) {
                         //when login successful ,FriendsObserver start
-                        mFriendsObserver = new FriendsObserver(connection, mInstance);
+                        mFriendsObserver = FriendsObserver.getInstance(connection, mInstance);
                         mFriendsObserver.init();
                     } else {
                         handleLoginError(new Exception("username or password error"));
@@ -325,6 +326,14 @@ public class ChatService extends Service {
 
         }
         e.printStackTrace();
+    }
+
+    public void addFriendStatusListener(ChatControl.FriendStatusListener listener) {
+        FriendsObserver.getInstance(connection, this).addPresenceListener(listener);
+    }
+
+    public void removeFriendStatusListener(ChatControl.FriendStatusListener listener) {
+        FriendsObserver.getInstance(connection, this).removePresenceListener(listener);
     }
 
 }
