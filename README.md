@@ -1,5 +1,5 @@
 # Chat
 
-This is a Android Project for Chat.
+This is a android project for Chat.
 
 Use openfire.
