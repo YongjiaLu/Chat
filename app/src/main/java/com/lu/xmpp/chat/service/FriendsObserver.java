@@ -9,9 +9,12 @@ import com.lu.xmpp.utils.BitmapUtils;
 import com.lu.xmpp.utils.Log;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterGroup;
@@ -29,7 +32,7 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class FriendsObserver implements RosterListener, RosterLoadedListener {
+public class FriendsObserver implements RosterLoadedListener, StanzaListener {
     private static FriendsObserver mInstance;
 
     private static final long TIME_LIMIT_FOR_REFRESH = 1000 * 60 * 5;//5 minute
@@ -54,12 +57,12 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
     }
 
     public void init() {
-
         if (!validateConnection()) {
             Log.e(Tag, "connection exception!");
             return;
         }
         mRoster = Roster.getInstanceFor(mConnection);
+        //mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
         mRoster.addRosterLoadedListener(this);
         new Thread(new Runnable() {
             @Override
@@ -80,67 +83,74 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
         mRoster.removeRosterLoadedListener(this);
     }
 
-    /**
-     * Called when roster entries are added.
-     *
-     * @param addresses the XMPP addresses of the contacts that have been added to the roster.
-     */
-    @Override
-    public void entriesAdded(Collection<String> addresses) {
-        Update(addresses);
-    }
+//    /**
+//     * Called when roster entries are added.
+//     *
+//     * @param addresses the XMPP addresses of the contacts that have been added to the roster.
+//     */
+//    @Override
+//    public void entriesAdded(Collection<String> addresses) {
+//        Update(addresses);
+//    }
+//
+//    /**
+//     * Called when a roster entries are updated.
+//     *
+//     * @param addresses the XMPP addresses of the contacts whose entries have been updated.
+//     */
+//    @Override
+//    public void entriesUpdated(Collection<String> addresses) {
+//        Update(addresses);
+//    }
+//
+//    private void Update(Collection<String> addresses) {
+//        if (!validateConnection()) {
+//            Log.e(Tag, "Connection Exception");
+//            return;
+//        }
+//        Roster roster = Roster.getInstanceFor(mConnection);
+//
+//        for (String address : addresses) {
+//            RosterEntry entry = roster.getEntry(address);
+//            Friend friend = parseRosterToFriend(entry, roster);
+//            if (null != friend) {
+//                for (Friend f : friends) {
+//                    if (f.getJid().equals(friend.getJid())) {
+//                        friends.remove(f);
+//                        break;
+//                    }
+//                }
+//                friends.add(friend);
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Called when a roster entries are removed.
+//     *
+//     * @param addresses the XMPP addresses of the contacts that have been removed from the roster.
+//     */
+//    @Override
+//    public void entriesDeleted(Collection<String> addresses) {
+//        if (!validateConnection()) {
+//            Log.e(Tag, "Connection Exception");
+//            return;
+//        }
+//
+//        for (String address : addresses) {
+//            Log.e(Tag, address);
+//        }
+//
+//        for (String jid : addresses) {
+//            for (Friend friend : friends) {
+//                if (jid.equals(friend.getJid())) {
+//                    friends.remove(friend);
+//                    break;
+//                }
+//            }
+//        }
+//    }
 
-    /**
-     * Called when a roster entries are updated.
-     *
-     * @param addresses the XMPP addresses of the contacts whose entries have been updated.
-     */
-    @Override
-    public void entriesUpdated(Collection<String> addresses) {
-        Update(addresses);
-    }
-
-    private void Update(Collection<String> addresses) {
-        if (!validateConnection()) {
-            Log.e(Tag, "Connection Exception");
-            return;
-        }
-        Roster roster = Roster.getInstanceFor(mConnection);
-
-        for (String address : addresses) {
-            RosterEntry entry = roster.getEntry(address);
-            Friend friend = parseRosterToFriend(entry, roster);
-            if (null != friend) {
-                for (Friend f : friends) {
-                    if (f.getJid().equals(friend.getJid())) {
-                        friends.remove(f);
-                    }
-                }
-                friends.add(friend);
-            }
-        }
-    }
-
-    /**
-     * Called when a roster entries are removed.
-     *
-     * @param addresses the XMPP addresses of the contacts that have been removed from the roster.
-     */
-    @Override
-    public void entriesDeleted(Collection<String> addresses) {
-        if (!validateConnection()) {
-            Log.e(Tag, "Connection Exception");
-            return;
-        }
-
-        for (String jid : addresses) {
-            for (Friend friend : friends) {
-                if (jid.equals(friend.getJid())) {
-                    friends.remove(friend);
-                }
-            }
-        }
-    }
 
     /**
      * Called when the presence of a roster entry is changed. Care should be taken
@@ -167,15 +177,7 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
      * @param presence the presence that changed.
      * @see Roster#getPresence(String)
      */
-    @Override
     public void presenceChanged(Presence presence) {
-        String Tag = "presenceChanged";
-        if (!validateConnection()) {
-            Log.e(Tag, "Connection Exception");
-        }
-        Log.e(Tag, "-----------------------presenceChanged-----------------------");
-        showPresence(presence);
-        Log.e(Tag, "-----------------------presenceChanged-----------------------");
         /**
          * Presence.Type
          *
@@ -207,6 +209,22 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
         //TODO Finish the work
         if (presence.getType() == Presence.Type.subscribe) {
             //receive a friend request
+            String jid = presence.getFrom().split("/")[0] != null ? (presence.getFrom().split("/")[0]) : null;
+
+            if (jid == null) {
+                Log.e(Tag, "receive a error message !");
+                return;
+            }
+
+            String username = (jid.split("@")[0]) != null ? jid.split("@")[0] : "ChatUser";
+
+            String message = presence.getStatus() == null ? "hello! i'm " + username : presence.getStatus();
+
+            Log.e(Tag, "receive a friend request");
+            for (ChatControl.FriendStatusListener listener : listeners) {
+
+                listener.onNewFriendAddNotice(presence, message, jid);
+            }
         }
 
     }
@@ -218,14 +236,11 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
      */
     @Override
     public void onRosterLoaded(Roster roster) {
-        List<Friend> list = friends;
-        if (System.currentTimeMillis() - lastUpdateTime >= TIME_LIMIT_FOR_REFRESH) {
-            list = parseRosterToFriend(roster);
-            lastUpdateTime = System.currentTimeMillis();
-        }
+        parseRosterToFriend(roster);
+        lastUpdateTime = System.currentTimeMillis();
         Intent intent = new Intent(mService, ChatService.class);
         intent.setAction(mService.ActionOnReceiverFriends);
-        intent.putParcelableArrayListExtra(mService.ParamFriendList, (ArrayList<? extends Parcelable>) list);
+        intent.putParcelableArrayListExtra(mService.ParamFriendList, (ArrayList<? extends Parcelable>) friends);
         mService.startService(intent);
         finish();
     }
@@ -267,6 +282,8 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
                 return lhs.getUsername().compareTo(rhs.getUsername()) > 0 ? 1 : -1;
             }
         });
+
+        Log.e(Tag, "A new list had sort");
 
         //sortList(friends);
 
@@ -328,18 +345,35 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
 
             if (registerCount == 1) throw new Exception("this method had call");
 
+            if (mConnection == null) throw new NullPointerException("Connection == null");
+            if (!mConnection.isConnected())
+                throw new SmackException("this connection had not connected");
+            if (!mConnection.isAuthenticated())
+                throw new SmackException("this connection had not login");
+
+            mConnection.addAsyncStanzaListener(this, StanzaTypeFilter.PRESENCE);
+
             Log.e(Tag, "-------------------------------------------------------------------");
             Log.e(Tag, "start a presence listener ,Register Counter=" + ++registerCount);
             Log.e(Tag, "-------------------------------------------------------------------");
-            mRoster.addRosterListener(this);
+
             rosterPresenceFlag = true;
         }
     }
 
-    public synchronized void stopRosterPresenceListener() {
+    public synchronized void stopRosterPresenceListener() throws Exception {
         if (rosterPresenceFlag && mRoster != null) {
             Log.e(Tag, "stop a presence listener ,Register Counter=" + --registerCount);
-            mRoster.removeRosterListener(this);
+            if (registerCount == 1) throw new Exception("this method had call");
+
+            if (mConnection == null) throw new NullPointerException("Connection == null");
+            if (!mConnection.isConnected())
+                throw new SmackException("this connection had not connected");
+            if (!mConnection.isAuthenticated())
+                throw new SmackException("this connection had not login");
+
+            mConnection.removeAsyncStanzaListener(this);
+
             rosterPresenceFlag = false;
         }
     }
@@ -379,6 +413,10 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
         });
     }
 
+    /**
+     * use XmppConnection.addStanzaFilter to get callback
+     */
+
     public void addPresenceListener(ChatControl.FriendStatusListener listener) {
         if (!listeners.contains(listener)) {
             Log.e(Tag, "a Presence Listener had register");
@@ -393,4 +431,21 @@ public class FriendsObserver implements RosterListener, RosterLoadedListener {
         }
     }
 
+    /**
+     * Process the next stanza(/packet) sent to this stanza(/packet) listener.
+     * <p>
+     * A single thread is responsible for invoking all listeners, so
+     * it's very important that implementations of this method not block
+     * for any extended period of time.
+     * </p>
+     *
+     * @param packet the stanza(/packet) to process.
+     */
+    @Override
+    public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
+        if (packet instanceof Presence) {
+            Presence presence = (Presence) packet;
+            presenceChanged(presence);
+        }
+    }
 }

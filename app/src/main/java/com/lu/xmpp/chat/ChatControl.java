@@ -5,6 +5,9 @@ import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Presence;
+
 import java.util.List;
 
 /**
@@ -70,10 +73,11 @@ public class ChatControl {
         /**
          * A new friend want to add , there will be child thread
          *
-         * @param friends friend collection
-         * @param friend  which one ask for notice
+         * @param presence presence body
+         * @param message  message
+         * @param jid      which one call you
          */
-        void onNewFriendAddNotice(List<Friend> friends, Friend friend);
+        void onNewFriendAddNotice(Presence presence, String message, String jid);
 
         /**
          * A friend delete our account
@@ -84,5 +88,8 @@ public class ChatControl {
         void onFriendDeleteNotice(List<Friend> friends, Friend friend);
     }
 
+    public void replyNewFriendNotice(Presence presence) {
+        service.replyNewFriendNotice(presence);
+    }
 
 }

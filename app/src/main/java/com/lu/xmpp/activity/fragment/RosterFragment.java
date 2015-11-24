@@ -2,28 +2,26 @@ package com.lu.xmpp.activity.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SimpleItemAnimator;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
+import com.lu.xmpp.activity.base.BaseFragment;
 import com.lu.xmpp.adapter.FriendListAdapt;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 
+import org.jivesoftware.smack.packet.Presence;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by xuyu on 2015/11/17.
@@ -40,11 +38,12 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
         super(activity);
     }
 
+    private View view;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_roster, container, false);
+        view = inflater.inflate(R.layout.fragment_roster, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(container.getContext());
@@ -109,15 +108,36 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
         });
     }
 
+
     /**
-     * A new friend want to add , there will be child thread
-     *
-     * @param friends friend collection
-     * @param friend  which one ask for notice
+     * @param presence presence body
+     * @param message  message
+     * @param jid      which one call you
      */
     @Override
-    public void onNewFriendAddNotice(List<Friend> friends, Friend friend) {
-
+    public void onNewFriendAddNotice(final Presence presence, final String message, final String jid) {
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                Snackbar.make(view, jid + "want to join with you!", Snackbar.LENGTH_LONG).setAction("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ChatControl.getInstance().replyNewFriendNotice(presence);
+                        ChatControl.getInstance().getFriends(new ChatControl.GetFriendListener() {
+                            @Override
+                            public void onGetFriends(final List<Friend> friends) {
+                                getHandler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        showFriendList(friends);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }).show();
+            }
+        });
     }
 
     /**

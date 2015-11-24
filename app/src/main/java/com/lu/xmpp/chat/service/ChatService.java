@@ -17,7 +17,12 @@ import com.lu.xmpp.utils.NetUtil;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.StanzaTypeFilter;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
@@ -75,6 +80,8 @@ public class ChatService extends Service {
     public void onCreate() {
         mInstance = this;
         connection = new ChatConnection(SmackDebug, ChatService.this);
+        Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(networkReceiver, filter);
@@ -145,7 +152,11 @@ public class ChatService extends Service {
         }
 
         if (null != mFriendsObserver) {
-            mFriendsObserver.stopRosterPresenceListener();
+            try {
+                mFriendsObserver.stopRosterPresenceListener();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             mFriendsObserver.finish();
         }
     }
@@ -334,6 +345,27 @@ public class ChatService extends Service {
 
     public void removeFriendStatusListener(ChatControl.FriendStatusListener listener) {
         FriendsObserver.getInstance(connection, this).removePresenceListener(listener);
+    }
+
+    public void replyNewFriendNotice(Presence presence) {
+        try {
+            Roster roster = Roster.getInstanceFor(connection);
+            roster.createEntry(presence.getFrom().split("/")[0], null, null);
+            Presence response = new Presence(Presence.Type.subscribed);
+            response.setFrom(connection.getUser() + "/" + "Chat");
+            response.setTo(presence.getFrom());
+            response.setMode(Presence.Mode.available);
+            connection.sendStanza(response);
+
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        }
     }
 
 }

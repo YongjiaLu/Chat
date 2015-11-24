@@ -1,9 +1,7 @@
 package com.lu.xmpp.activity.fragment;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +9,7 @@ import android.widget.LinearLayout;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
+import com.lu.xmpp.activity.base.BaseFragment;
 
 /**
  * Created by xuyu on 2015/11/19.

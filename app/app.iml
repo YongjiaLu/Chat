@@ -87,8 +87,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 23 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="dnsjava-2.1.6" level="project" />
+    <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="smack-tcp-4.1.0" level="project" />
     <orderEntry type="library" exported="" name="design-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="smack-resolver-minidns-4.1.0" level="project" />
@@ -96,8 +96,8 @@
     <orderEntry type="library" exported="" name="jxmpp-core-0.4.2-beta1" level="project" />
     <orderEntry type="library" exported="" name="smack-extensions-4.1.0" level="project" />
     <orderEntry type="library" exported="" name="minidns-0.1.7" level="project" />
-    <orderEntry type="library" exported="" name="smack-android-extensions-4.1.0" level="project" />
     <orderEntry type="library" exported="" name="smack-android-4.1.0" level="project" />
+    <orderEntry type="library" exported="" name="smack-android-extensions-4.1.0" level="project" />
     <orderEntry type="library" exported="" name="recyclerview-v7-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="jxmpp-util-cache-0.4.2-beta1" level="project" />
     <orderEntry type="library" exported="" name="smack-sasl-provided-4.1.0" level="project" />
@@ -109,6 +109,5 @@
     <orderEntry type="library" exported="" name="cardview-v7-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-23.1.0" level="project" />
     <orderEntry type="module" module-name="MemorizingActivity" exported="" />
-    <orderEntry type="library" exported="" name="android-android-23" level="project" />
   </component>
 </module>

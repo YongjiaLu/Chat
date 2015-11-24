@@ -4,7 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.lu.xmpp.activity.fragment.BaseFragment;
+import com.lu.xmpp.activity.base.BaseFragment;
 
 import java.util.List;
 

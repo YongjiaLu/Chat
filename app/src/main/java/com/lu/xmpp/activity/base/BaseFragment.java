@@ -1,4 +1,4 @@
-package com.lu.xmpp.activity.fragment;
+package com.lu.xmpp.activity.base;
 
 import android.support.v4.app.Fragment;
 

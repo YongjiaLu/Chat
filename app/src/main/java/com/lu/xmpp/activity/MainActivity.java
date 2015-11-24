@@ -9,7 +9,7 @@ import android.support.v7.widget.Toolbar;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
-import com.lu.xmpp.activity.fragment.BaseFragment;
+import com.lu.xmpp.activity.base.BaseFragment;
 import com.lu.xmpp.activity.fragment.RosterFragment;
 import com.lu.xmpp.adapter.MainActivityFragmentAdapt;
 import com.lu.xmpp.chat.ChatControl;
