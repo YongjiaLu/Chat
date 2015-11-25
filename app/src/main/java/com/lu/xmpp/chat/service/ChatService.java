@@ -17,11 +17,8 @@ import com.lu.xmpp.utils.NetUtil;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
@@ -65,7 +62,7 @@ public class ChatService extends Service {
     //Register Manager
     private ChatRegisterManager mChatRegisterManager = ChatRegisterManager.getInstance();
     //Friends Observer
-    private FriendsObserver mFriendsObserver;
+    private FriendManager mFriendManager;
 
     public static ChatService getInstance() {
         return mInstance;
@@ -114,8 +111,8 @@ public class ChatService extends Service {
                 break;
                 case ActionStartGetFriends: {
                     //开始一个获取Roster的任务
-                    mFriendsObserver = FriendsObserver.getInstance(connection, this);
-                    mFriendsObserver.init();
+                    mFriendManager = FriendManager.getInstance(connection, this);
+                    mFriendManager.init();
                 }
                 break;
 
@@ -125,11 +122,11 @@ public class ChatService extends Service {
                     broadcast.setAction(BroadCast_Action_On_Receiver_Friends);
                     broadcast.putExtra(ParamFriendList, intent.getParcelableArrayListExtra(ParamFriendList));
                     sendBroadcast(broadcast);
-                    if (mFriendsObserver == null) {
-                        mFriendsObserver = FriendsObserver.getInstance(connection, this);
+                    if (mFriendManager == null) {
+                        mFriendManager = FriendManager.getInstance(connection, this);
                     }
                     try {
-                        mFriendsObserver.startRosterPresenceListener();
+                        mFriendManager.startRosterPresenceListener();
                     } catch (Exception e) {
                         Log.e(Tag, e.toString());
                     }
@@ -151,13 +148,13 @@ public class ChatService extends Service {
             connection = null;
         }
 
-        if (null != mFriendsObserver) {
+        if (null != mFriendManager) {
             try {
-                mFriendsObserver.stopRosterPresenceListener();
+                mFriendManager.stopRosterPresenceListener();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            mFriendsObserver.finish();
+            mFriendManager.finish();
         }
     }
 
@@ -201,9 +198,9 @@ public class ChatService extends Service {
                     connection.login(username, password);
 
                     if (connection.isAuthenticated()) {
-                        //when login successful ,FriendsObserver start
-                        mFriendsObserver = FriendsObserver.getInstance(connection, mInstance);
-                        mFriendsObserver.init();
+                        //when login successful ,FriendManager start
+                        mFriendManager = FriendManager.getInstance(connection, mInstance);
+                        mFriendManager.init();
                     } else {
                         handleLoginError(new Exception("username or password error"));
                     }
@@ -231,7 +228,7 @@ public class ChatService extends Service {
     /**
      * 是否与服务器成功建立连接
      *
-     * @return
+     * @return is connected
      */
     public boolean isConnected() {
         return connection.isConnected();
@@ -340,11 +337,11 @@ public class ChatService extends Service {
     }
 
     public void addFriendStatusListener(ChatControl.FriendStatusListener listener) {
-        FriendsObserver.getInstance(connection, this).addPresenceListener(listener);
+        FriendManager.getInstance(connection, this).addPresenceListener(listener);
     }
 
     public void removeFriendStatusListener(ChatControl.FriendStatusListener listener) {
-        FriendsObserver.getInstance(connection, this).removePresenceListener(listener);
+        FriendManager.getInstance(connection, this).removePresenceListener(listener);
     }
 
     public void replyNewFriendNotice(Presence presence) {
@@ -368,4 +365,7 @@ public class ChatService extends Service {
         }
     }
 
+    public ChatConnection getConnection() {
+        return connection;
+    }
 }

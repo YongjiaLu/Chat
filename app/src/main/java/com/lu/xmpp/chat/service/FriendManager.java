@@ -18,7 +18,6 @@ import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterGroup;
-import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.roster.RosterLoadedListener;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
@@ -32,12 +31,12 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class FriendsObserver implements RosterLoadedListener, StanzaListener {
-    private static FriendsObserver mInstance;
+public class FriendManager implements RosterLoadedListener, StanzaListener {
+    private static FriendManager mInstance;
 
     private static final long TIME_LIMIT_FOR_REFRESH = 1000 * 60 * 5;//5 minute
     private long lastUpdateTime = 0;
-    private static String Tag = "FriendsObserver";
+    private static String Tag = "FriendManager";
 
     private ChatService mService;
     private XMPPConnection mConnection;
@@ -46,12 +45,12 @@ public class FriendsObserver implements RosterLoadedListener, StanzaListener {
     private List<Friend> friends = new ArrayList<>();
     private List<ChatControl.FriendStatusListener> listeners = new ArrayList<>();
 
-    public synchronized static FriendsObserver getInstance(XMPPConnection connection, ChatService service) {
-        if (mInstance == null) mInstance = new FriendsObserver(connection, service);
+    public synchronized static FriendManager getInstance(XMPPConnection connection, ChatService service) {
+        if (mInstance == null) mInstance = new FriendManager(connection, service);
         return mInstance;
     }
 
-    private FriendsObserver(XMPPConnection connection, ChatService service) {
+    private FriendManager(XMPPConnection connection, ChatService service) {
         mService = service;
         mConnection = connection;
     }
