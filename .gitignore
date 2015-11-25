@@ -1,11 +1,9 @@
-### Example user template template
-### Example user template
-
-# IntelliJ project files
-
-.idea
-*.iml
-local.properties
-out
-gen
 # Created by .ignore support plugin (hsz.mobi)
+.gradle
+.idea
+MyXmpp.iml
+Chat.iml
+local.properties
+MemorizingActivity/build
+MemorizingActivity/MemorizingActivity.iml
+\build
