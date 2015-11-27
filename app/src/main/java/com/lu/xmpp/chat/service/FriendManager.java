@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Parcelable;
 
 import com.lu.xmpp.chat.ChatControl;
+import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.BitmapUtils;
 import com.lu.xmpp.utils.Log;
@@ -31,7 +32,7 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class FriendManager implements RosterLoadedListener, StanzaListener {
+class FriendManager implements RosterLoadedListener, StanzaListener {
     private static FriendManager mInstance;
 
     private static final long TIME_LIMIT_FOR_REFRESH = 1000 * 60 * 5;//5 minute
@@ -221,7 +222,6 @@ public class FriendManager implements RosterLoadedListener, StanzaListener {
 
             Log.e(Tag, "receive a friend request");
             for (ChatControl.FriendStatusListener listener : listeners) {
-
                 listener.onNewFriendAddNotice(presence, message, jid);
             }
         }
@@ -446,5 +446,9 @@ public class FriendManager implements RosterLoadedListener, StanzaListener {
             Presence presence = (Presence) packet;
             presenceChanged(presence);
         }
+    }
+
+    public void searchFriend(SearchFriendsAsync.SearchFriendCallBack callBack, String... byName) {
+        new SearchFriendsAsync(callBack).execute(byName);
     }
 }

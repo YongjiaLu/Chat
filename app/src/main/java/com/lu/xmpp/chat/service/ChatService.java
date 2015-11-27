@@ -10,15 +10,19 @@ import android.os.IBinder;
 
 import com.lu.xmpp.chat.ChatConnectCallBack;
 import com.lu.xmpp.chat.ChatControl;
+import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.contacts.ChatContacts;
+import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 import com.lu.xmpp.utils.NetUtil;
 
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
@@ -38,7 +42,7 @@ public class ChatService extends Service {
     public final String ActionLogin = "chat.service.login";
     public final String ActionRegister = "chat.service.register";
     public final String ActionStartGetFriends = "chat.service.start_get_friends";
-    public final String ActionOnReceiverFriends = "chat.service.on_receiver_Friends";
+    public final String ActionOnReceiverFriends = "chat.service.on_receiver_friends";
     //<===========================================================>
 
     //Param
@@ -176,11 +180,11 @@ public class ChatService extends Service {
                     }
                     Log.e(Tag, "connect complete");
                 } catch (XMPPException e) {
-
+                    e.printStackTrace();
                 } catch (SmackException e) {
-
+                    e.printStackTrace();
                 } catch (IOException e) {
-
+                    e.printStackTrace();
                 }
             }
         }).start();
@@ -306,18 +310,6 @@ public class ChatService extends Service {
         mChatRegisterManager.removeChatConnectCallBack(callBack);
     }
 
-    //<=========================================================================================>
-    //<==================================  login callback  =====================================>
-    //<=========================================================================================>
-
-    public void registerLoginCallBack(ConnectionListener callBack) {
-        connection.addConnectionListener(callBack);
-    }
-
-    public void unRegisterLoginCallBack(ConnectionListener callBack) {
-        connection.removeConnectionListener(callBack);
-    }
-
     public void handleLoginError(Exception e) {
 
         try {
@@ -349,11 +341,10 @@ public class ChatService extends Service {
             Roster roster = Roster.getInstanceFor(connection);
             roster.createEntry(presence.getFrom().split("/")[0], null, null);
             Presence response = new Presence(Presence.Type.subscribed);
-            response.setFrom(connection.getUser() + "/" + "Chat");
+            response.setFrom(connection.getUser());
             response.setTo(presence.getFrom());
             response.setMode(Presence.Mode.available);
             connection.sendStanza(response);
-
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         } catch (SmackException.NotLoggedInException e) {
@@ -368,4 +359,9 @@ public class ChatService extends Service {
     public ChatConnection getConnection() {
         return connection;
     }
+
+    public void searchFriend(SearchFriendsAsync.SearchFriendCallBack callBack, String byName) {
+        mFriendManager.searchFriend(callBack, byName);
+    }
+
 }

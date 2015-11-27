@@ -34,6 +34,9 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
 
     private List<Friend> friends = new ArrayList<>();
 
+    public RosterFragment() {
+    }
+
     public RosterFragment(BaseActivity activity) {
         super(activity);
     }
@@ -51,11 +54,6 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         return view;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.lu.xmpp.chat;
 
 import com.lu.xmpp.chat.async.GetFriendsAsync;
+import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
@@ -32,11 +33,13 @@ public class ChatControl {
     }
 
     public void addFriendStatusListener(FriendStatusListener listener) {
-        service.addFriendStatusListener(listener);
+        if (null != service)
+            service.addFriendStatusListener(listener);
     }
 
     public void removeFriendStatusListener(FriendStatusListener listener) {
-        service.removeFriendStatusListener(listener);
+        if (null != service)
+            service.removeFriendStatusListener(listener);
     }
 
     /**
@@ -85,6 +88,7 @@ public class ChatControl {
          * @param friends friend collection
          * @param friend  which one delete you from his friend list
          */
+        // FIXME: 2015/11/26
         void onFriendDeleteNotice(List<Friend> friends, Friend friend);
     }
 
@@ -92,4 +96,7 @@ public class ChatControl {
         service.replyNewFriendNotice(presence);
     }
 
+    public void searchFriends(SearchFriendsAsync.SearchFriendCallBack callBack, String byName) {
+        service.searchFriend(callBack, byName);
+    }
 }

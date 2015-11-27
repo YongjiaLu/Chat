@@ -1,11 +1,15 @@
 package com.lu.xmpp.activity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.activity.base.BaseActivity;
@@ -39,21 +43,19 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.e(Tag, "OnCreate");
         mChatControl = ChatControl.getInstance();
         setContentView(R.layout.activity_main);
         mCollapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.TRANSPARENT);
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setNavigationIcon(R.mipmap.ic_arrow_back_white_24dp);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         initUI();
-        try {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        } catch (NullPointerException e) {
-            Log.e(Tag, "Hello World ~");
-        }
     }
 
     private void initUI() {
@@ -68,6 +70,28 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
         tabLayout.setTabsFromPagerAdapter(adapt);
         tabLayout.setupWithViewPager(viewpager);
         mChatControl.getFriends(this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_person_add:
+                startActivity(new Intent(this, SearchActivity.class));
+                break;
+            case R.id.menu_item_group_add:
+                Toast.makeText(this, "hello world", Toast.LENGTH_SHORT).show();
+                break;
+            case android.R.id.home:
+                onBackPressed();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

@@ -99,4 +99,9 @@
         "when a user tries to pick up one of cards.\n\n"
     </string>
     <string name="this_is_welcome_page">This is Welcome Page</string>
+    <string name="title_activity_search">SearchActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="Search">Search</string>
 </resources>

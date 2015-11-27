@@ -88,6 +88,4 @@ public class ConnectControl {
         intent.putExtra(service.ParamPassword, password);
         context.startService(intent);
     }
-
-
 }

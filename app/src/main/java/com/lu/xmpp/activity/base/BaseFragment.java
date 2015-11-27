@@ -12,6 +12,8 @@ import com.lu.xmpp.activity.base.ChatHandler;
 public abstract class BaseFragment extends Fragment {
     private BaseActivity activity;
 
+    public BaseFragment() { }
+
     public BaseFragment(BaseActivity activity) {
         this.activity = activity;
     }
@@ -19,7 +21,6 @@ public abstract class BaseFragment extends Fragment {
     public ChatHandler getHandler() {
         return activity.getHandler();
     }
-
 
     public abstract String getTitle();
 }

@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 
 import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.connect.ChatConnection;
-import com.lu.xmpp.contacts.ChatContacts;
 import com.lu.xmpp.utils.Log;
 
 import org.jivesoftware.smack.SmackException;
@@ -19,7 +18,7 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/25.
  */
-public class SearchFriendsAsync extends AsyncTask<String, Void, List<String>> {
+public class SearchFriendsAsync extends AsyncTask<String, Void, List<SearchFriendsAsync.Entity>> {
 
     private static final String Tag = "SearchFriendsAsync";
 
@@ -45,14 +44,19 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<String>> {
      * @see #publishProgress
      */
     @Override
-    protected List<String> doInBackground(String... params) {
+    protected List<SearchFriendsAsync.Entity> doInBackground(String... params) {
 
-        List<String> list = new ArrayList<>();
+        List<Entity> list = new ArrayList<>();
 
         for (String byName : params) {
             try {
-                Log.e(Tag, "start friend search async ,search by name =" + byName);
-                list.addAll(SearchFriend(byName));
+                Log.e(Tag, "start friend search async ,search by name =" + (byName.trim().equals("") ? "empty" : byName));
+
+                List<SearchFriendsAsync.Entity> results = SearchFriend(byName);
+
+                if (results != null && results.size() > 0) {
+                    list.addAll(results);
+                }
             } catch (SmackException.NotConnectedException e) {
                 e.printStackTrace();
             } catch (XMPPException.XMPPErrorException e) {
@@ -65,9 +69,10 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<String>> {
     }
 
     @Override
-    protected void onPostExecute(List<String> strings) {
+    protected void onPostExecute(List<SearchFriendsAsync.Entity> strings) {
+
         if (null != mSearchFriendCallBack) {
-            if (strings.size() > 0) {
+            if (strings != null && strings.size() > 0) {
                 mSearchFriendCallBack.onSearchFriend(strings);
             } else {
                 mSearchFriendCallBack.onError();
@@ -78,13 +83,14 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<String>> {
         super.onPostExecute(strings);
     }
 
-    private static final String SEARCH_URL = "search." + ChatContacts.getDomain();
 
-    public List<String> SearchFriend(String byName) throws SmackException.NotConnectedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+    public List<SearchFriendsAsync.Entity> SearchFriend(String byName) throws SmackException.NotConnectedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
         ChatConnection connection = ChatService.getInstance().getConnection();
         if (connection == null || !connection.isAuthenticated())
             throw new SmackException.NotConnectedException();
+
         UserSearchManager search = new UserSearchManager(connection);
+        String SEARCH_URL = "search." + connection.getServiceName();
         Form searchForm = search.getSearchForm(SEARCH_URL);
         Form answerForm = searchForm.createAnswerForm();
         answerForm.setAnswer("Username", true);
@@ -92,26 +98,88 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<String>> {
         answerForm.setAnswer("Name", true);
 
         answerForm.setAnswer("search", byName);
+
         ReportedData reportedData = search.getSearchResults(answerForm, SEARCH_URL);
 
         List<ReportedData.Row> rows = reportedData.getRows();
-        ArrayList<String> results = new ArrayList<>();
+
+        List<SearchFriendsAsync.Entity> entities = new ArrayList<>();
+
         for (ReportedData.Row row : rows) {
-            results.add(row.getValues("Username").toString());
+            Entity entity = new Entity();
+            entity.setUserName(fixString(row.getValues("Username").toString()));
+            entity.setEmail(fixString(row.getValues("Email").toString()));
+            entity.setName(fixString(row.getValues("Name").toString()));
+            entity.setJid(fixString(row.getValues("JID").toString()));
+            entities.add(entity);
         }
-        return results;
+        return entities;
     }
 
     /**
      * Execute in Asynctask.postExecute.
      */
-    interface SearchFriendCallBack {
+    public interface SearchFriendCallBack {
 
-        void onSearchFriend(List<String> ids);
+        void onSearchFriend(List<SearchFriendsAsync.Entity> ids);
 
         void onError();
 
     }
 
 
+    public class Entity {
+        private String UserName;
+        private String Jid;
+        private String Email;
+        private String Name;
+
+
+        public String getUserName() {
+            return UserName;
+        }
+
+        public void setUserName(String userName) {
+            UserName = userName;
+        }
+
+        public String getJid() {
+            return Jid;
+        }
+
+        public void setJid(String jid) {
+            Jid = jid;
+        }
+
+        public String getEmail() {
+            return Email;
+        }
+
+        public void setEmail(String email) {
+            Email = email;
+        }
+
+        public String getName() {
+            return Name;
+        }
+
+        public void setName(String name) {
+            Name = name;
+        }
+    }
+
+    /**
+     * @param string results contain "[data]"
+     * @return "data"
+     */
+    private String fixString(String string) {
+        StringBuffer sb = new StringBuffer(string);
+        int start = sb.indexOf("[");
+        if (start >= 0)
+            sb = sb.deleteCharAt(start);
+        int end = sb.indexOf("]");
+        if (end >= 0)
+            sb = sb.deleteCharAt(end);
+        return sb.toString();
+    }
 }
