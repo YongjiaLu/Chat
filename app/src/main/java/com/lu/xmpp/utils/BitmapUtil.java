@@ -11,7 +11,7 @@ import java.io.ByteArrayInputStream;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class BitmapUtils {
+public class BitmapUtil {
 
     public static Bitmap parseByteArrayToBitmap(byte[] data, Context context) {
         Bitmap bitmap;

@@ -2,10 +2,12 @@ package com.lu.xmpp.activity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -16,12 +18,16 @@ import com.lu.xmpp.activity.base.BaseActivity;
 import com.lu.xmpp.adapter.SearchListAdapt;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
+import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
+import com.lu.xmpp.view.custom.dialog.AddFriendDialog;
 import com.rengwuxian.materialedittext.MaterialEditText;
+
+import org.jivesoftware.smack.packet.Presence;
 
 import java.util.List;
 
-public class SearchActivity extends BaseActivity implements View.OnClickListener, SearchFriendsAsync.SearchFriendCallBack {
+public class SearchActivity extends BaseActivity implements View.OnClickListener, SearchFriendsAsync.SearchFriendCallBack, SearchListAdapt.OnItemClickListener, AddFriendDialog.OnButtonClick, ChatControl.FriendStatusListener {
     private static final String Tag = "SearchActivity";
     private RecyclerView mRecyclerView;
     private MaterialEditText materialEditText;
@@ -29,12 +35,15 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
 
     private SearchListAdapt adapt;
 
+    private View view;
+
     private ChatControl control = ChatControl.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
+        view = LayoutInflater.from(this).inflate(R.layout.activity_search, null);
+        setContentView(view);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         materialEditText = (MaterialEditText) findViewById(R.id.et_by_name);
         btnCommit = (Button) findViewById(R.id.btn_commit);
@@ -45,6 +54,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         adapt = new SearchListAdapt();
+        adapt.setOnItemClickListener(this);
         mRecyclerView.setAdapter(adapt);
         //mRecyclerView.addItemDecoration(new SearchListAdapt.DividerGridItemDecoration(this));
     }
@@ -84,6 +94,80 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
 
     @Override
     public void onError() {
-        Log.e(Tag, "onError");
+        Toast.makeText(SearchActivity.this, "Hey baby,take easy,change some key word and take more try~", Toast.LENGTH_SHORT).show();
+        adapt.setEntities(null);
+    }
+
+    @Override
+    public void onItemClick(int Position, SearchFriendsAsync.Entity entity) {
+        AddFriendDialog dialog = new AddFriendDialog(this, entity);
+        dialog.setOnButtonClick(this);
+        dialog.show();
+    }
+
+    @Override
+    public void onConfirm(SearchFriendsAsync.Entity entity) {
+        String message = materialEditText.getText().toString();
+        control.startAddFriend(entity.getJid(), message);
+
+    }
+
+    @Override
+    public void onCancel() {
+        Log.d(Tag, "user cancel");
+    }
+
+    /**
+     * On Friend Status Change when a friend available/unavailable.
+     *
+     * @param friends friend collection
+     * @param friend  which one changed
+     */
+    @Override
+    public void onFriendsStatusChanged(List<Friend> friends, Friend friend) {
+
+    }
+
+
+    /**
+     * @param presence presence body
+     * @param message  message
+     * @param jid      which one call you
+     */
+    @Override
+    public void onNewFriendAddNotice(final Presence presence, final String message, final String jid) {
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                Snackbar.make(view, jid + "want to join with you!", Snackbar.LENGTH_LONG).setAction("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ChatControl.getInstance().replyNewFriendNotice(presence);
+                        ChatControl.getInstance().getFriends(new ChatControl.GetFriendListener() {
+                            @Override
+                            public void onGetFriends(final List<Friend> friends) {
+                                getHandler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        //showFriendList(friends);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }).show();
+            }
+        });
+    }
+
+    /**
+     * A friend delete our account
+     *
+     * @param friends friend collection
+     * @param friend  which one delete you from his friend list
+     */
+    @Override
+    public void onFriendDeleteNotice(List<Friend> friends, Friend friend) {
+
     }
 }

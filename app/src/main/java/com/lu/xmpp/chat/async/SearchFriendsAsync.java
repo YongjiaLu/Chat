@@ -1,15 +1,19 @@
 package com.lu.xmpp.chat.async;
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
 import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.connect.ChatConnection;
+import com.lu.xmpp.utils.BitmapUtil;
 import com.lu.xmpp.utils.Log;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.search.ReportedData;
 import org.jivesoftware.smackx.search.UserSearchManager;
+import org.jivesoftware.smackx.vcardtemp.VCardManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jivesoftware.smackx.xdata.Form;
 
 import java.util.ArrayList;
@@ -105,12 +109,18 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<SearchFrien
 
         List<SearchFriendsAsync.Entity> entities = new ArrayList<>();
 
+        VCardManager vm=VCardManager.getInstanceFor(connection);
+
+
+
         for (ReportedData.Row row : rows) {
             Entity entity = new Entity();
             entity.setUserName(fixString(row.getValues("Username").toString()));
             entity.setEmail(fixString(row.getValues("Email").toString()));
             entity.setName(fixString(row.getValues("Name").toString()));
             entity.setJid(fixString(row.getValues("JID").toString()));
+            VCard  vCard=vm.loadVCard(entity.getJid());
+            entity.setAvatar(BitmapUtil.parseByteArrayToBitmap(vCard.getAvatar(), ChatService.getInstance()));
             entities.add(entity);
         }
         return entities;
@@ -133,6 +143,15 @@ public class SearchFriendsAsync extends AsyncTask<String, Void, List<SearchFrien
         private String Jid;
         private String Email;
         private String Name;
+        private Bitmap Avatar;
+
+        public Bitmap getAvatar() {
+            return Avatar;
+        }
+
+        public void setAvatar(Bitmap avatar) {
+            Avatar = avatar;
+        }
 
 
         public String getUserName() {

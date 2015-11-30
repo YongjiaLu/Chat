@@ -11,20 +11,26 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.lu.xmpp.R;
 import com.lu.xmpp.adapter.viewholder.SearchListCardView;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
+import com.lu.xmpp.utils.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by xuyu on 2015/11/26.
  */
 public class SearchListAdapt extends RecyclerView.Adapter<SearchListCardView> {
+    private static final String Tag = "SearchListAdapt";
 
-    private List<SearchFriendsAsync.Entity> entities;
+    private List<SearchFriendsAsync.Entity> entities = new ArrayList<>();
+
+    private OnItemClickListener listener;
 
     /**
      * Called when RecyclerView needs a new {@link ViewHolder} of the given type to represent
@@ -73,10 +79,21 @@ public class SearchListAdapt extends RecyclerView.Adapter<SearchListCardView> {
      * @param position The position of the item within the adapter's data set.
      */
     @Override
-    public void onBindViewHolder(SearchListCardView holder, int position) {
-        SearchFriendsAsync.Entity entity = entities.get(position);
+    public void onBindViewHolder(final SearchListCardView holder, int position) {
+        final SearchFriendsAsync.Entity entity = entities.get(position);
         holder.setUserName(entity.getUserName());
         holder.setUserId(entity.getJid());
+        holder.setAvater(entity.getAvatar());
+        holder.setPosition(position);
+        if (null != listener) {
+            holder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.e(Tag, "Item Click");
+                    listener.onItemClick(holder.readPosition(), entities.get(holder.readPosition()));
+                }
+            });
+        }
     }
 
     /**
@@ -91,7 +108,13 @@ public class SearchListAdapt extends RecyclerView.Adapter<SearchListCardView> {
 
     public void setEntities(List<SearchFriendsAsync.Entity> entities) {
         this.entities = entities;
+        if (entities == null)
+            this.entities.clear();
         notifyDataSetChanged();
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     public static class DividerGridItemDecoration extends RecyclerView.ItemDecoration {
@@ -228,5 +251,9 @@ public class SearchListAdapt extends RecyclerView.Adapter<SearchListCardView> {
                         mDivider.getIntrinsicHeight());
             }
         }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(int Position, SearchFriendsAsync.Entity entity);
     }
 }

@@ -13,16 +13,12 @@ import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.contacts.ChatContacts;
-import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 import com.lu.xmpp.utils.NetUtil;
 
-import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
@@ -336,25 +332,6 @@ public class ChatService extends Service {
         FriendManager.getInstance(connection, this).removePresenceListener(listener);
     }
 
-    public void replyNewFriendNotice(Presence presence) {
-        try {
-            Roster roster = Roster.getInstanceFor(connection);
-            roster.createEntry(presence.getFrom().split("/")[0], null, null);
-            Presence response = new Presence(Presence.Type.subscribed);
-            response.setFrom(connection.getUser());
-            response.setTo(presence.getFrom());
-            response.setMode(Presence.Mode.available);
-            connection.sendStanza(response);
-        } catch (SmackException.NotConnectedException e) {
-            e.printStackTrace();
-        } catch (SmackException.NotLoggedInException e) {
-            e.printStackTrace();
-        } catch (XMPPException.XMPPErrorException e) {
-            e.printStackTrace();
-        } catch (SmackException.NoResponseException e) {
-            e.printStackTrace();
-        }
-    }
 
     public ChatConnection getConnection() {
         return connection;
@@ -362,6 +339,23 @@ public class ChatService extends Service {
 
     public void searchFriend(SearchFriendsAsync.SearchFriendCallBack callBack, String byName) {
         mFriendManager.searchFriend(callBack, byName);
+    }
+
+    /**
+     * Confirm a friendship request,add to user list,and request the friendship
+     *
+     * @param presence
+     */
+    public void replyNewFriendNotice(Presence presence) {
+        try {
+            mFriendManager.replyNewFriendNotice(presence);
+        } catch (SmackException.NotConnectedException e) {
+            Log.e(Tag, "Service is ShutDown or Connection Error!");
+        }
+    }
+
+    public void startAddFriend(String Jid, String Message) {
+        mFriendManager.addFriend(Jid, Message);
     }
 
 }

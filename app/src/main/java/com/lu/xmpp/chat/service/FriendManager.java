@@ -5,8 +5,9 @@ import android.os.Parcelable;
 
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
+import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.modle.Friend;
-import com.lu.xmpp.utils.BitmapUtils;
+import com.lu.xmpp.utils.BitmapUtil;
 import com.lu.xmpp.utils.Log;
 
 import org.jivesoftware.smack.SmackException;
@@ -206,7 +207,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
                 }
             }
         }
-        //TODO Finish the work
         if (presence.getType() == Presence.Type.subscribe) {
             //receive a friend request
             String jid = presence.getFrom().split("/")[0] != null ? (presence.getFrom().split("/")[0]) : null;
@@ -223,6 +223,25 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             Log.e(Tag, "receive a friend request");
             for (ChatControl.FriendStatusListener listener : listeners) {
                 listener.onNewFriendAddNotice(presence, message, jid);
+            }
+        }
+        //TODO Bug
+        // be careful ,if some send Presence.Type.subscribed to here ,anyway, our user would add a error friend
+        // We need a stack to save our request and confirm it where it come from ,is from where our user request
+        if (presence.getType() == Presence.Type.subscribed) {
+            Log.e(Tag,"request a subscribed!");
+            String jid = presence.getFrom().split("/")[0] != null ? (presence.getFrom().split("/")[0]) : null;
+            try {
+                // don't have any group
+                mRoster.createEntry(jid, null, null);
+            } catch (SmackException.NotLoggedInException e) {
+                e.printStackTrace();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
             }
         }
 
@@ -313,7 +332,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             }
             //From VCard
             friend.setJid(entry.getUser());
-            friend.setAvatar(BitmapUtils.parseByteArrayToBitmap(vCard.getAvatar(), mService));
+            friend.setAvatar(BitmapUtil.parseByteArrayToBitmap(vCard.getAvatar(), mService));
             friend.setUsername(vCard.getNickName() != null ? vCard.getNickName() : entry.getUser().split("@")[0]);
 
             friend.setGroupName(Group);
@@ -451,4 +470,57 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
     public void searchFriend(SearchFriendsAsync.SearchFriendCallBack callBack, String... byName) {
         new SearchFriendsAsync(callBack).execute(byName);
     }
+
+    public void addFriend(final String Jid, String Message) {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ChatConnection connection = ChatService.getInstance().getConnection();
+                if (null == connection || !connection.isConnected() || !connection.isAuthenticated()) {
+                    try {
+                        throw new SmackException.NotConnectedException();
+                    } catch (SmackException.NotConnectedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                try {
+                    Presence request = new Presence(Presence.Type.subscribe);
+                    request.setFrom(connection.getUser());
+                    request.setTo(Jid);
+                    request.setMode(Presence.Mode.available);
+                    connection.sendStanza(request);
+                } catch (SmackException.NotConnectedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+    }
+
+    public void replyNewFriendNotice(Presence presence) throws SmackException.NotConnectedException {
+        ChatConnection connection = ChatService.getInstance().getConnection();
+        if (null == connection || !connection.isConnected() || !connection.isAuthenticated()) {
+            throw new SmackException.NotConnectedException();
+        }
+        try {
+            Roster roster = Roster.getInstanceFor(connection);
+            roster.createEntry(presence.getFrom().split("/")[0], null, null);
+            Presence response = new Presence(Presence.Type.subscribed);
+            response.setFrom(connection.getUser());
+            response.setTo(presence.getFrom());
+            response.setMode(Presence.Mode.available);
+            connection.sendStanza(response);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

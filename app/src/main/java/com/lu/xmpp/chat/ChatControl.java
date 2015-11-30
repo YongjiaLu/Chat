@@ -99,4 +99,8 @@ public class ChatControl {
     public void searchFriends(SearchFriendsAsync.SearchFriendCallBack callBack, String byName) {
         service.searchFriend(callBack, byName);
     }
+
+    public void startAddFriend(String Jid, String Message) {
+        service.startAddFriend(Jid, Message);
+    }
 }

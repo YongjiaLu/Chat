@@ -4,29 +4,41 @@
     android:layout_height="match_parent"
     android:layout_margin="2dp"
     android:background="@android:color/white"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="4dp">
 
     <TextView
         android:id="@+id/tv_username"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="36dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="2dp"
         android:gravity="center"
         android:text="username"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tv_user_id"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="36dp"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/tv_username"
+        android:layout_margin="2dp"
         android:gravity="center"
         android:text="user_id"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_below="@+id/tv_username"
-        android:layout_alignParentLeft="true" />
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="2dp"
+        android:src="@mipmap/ic_launcher" />
+
 
 </RelativeLayout>
