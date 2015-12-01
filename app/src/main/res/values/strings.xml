@@ -110,4 +110,5 @@
     <string name="Cancel">Cancel</string>
     <string name="new_friend">new friend</string>
     <string name="id_">id:</string>
+    <string name="title_activity_chat">ChatActivity</string>
 </resources>

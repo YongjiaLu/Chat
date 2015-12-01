@@ -78,7 +78,7 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
             holder.setFriendCard(friend.getUsername(), friend.getAvatar(), friend.getStatus().equals(Presence.Type.available.toString()) ? "online" : "offline");
         } else {
             String string = friends.get(position).toString();
-            holder.setTitle(string);
+            holder.setGroupName(string);
         }
     }
 

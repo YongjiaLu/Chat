@@ -18,26 +18,35 @@ public class FriendListCardView extends RecyclerView.ViewHolder {
     private ImageView ivAvatar;
     private TextView tvStatus;
 
+    private TextView tvGroupName;
+
     public FriendListCardView(View itemView) {
         super(itemView);
         tvUserName = (TextView) itemView.findViewById(R.id.tv_username);
         ivAvatar = (ImageView) itemView.findViewById(R.id.image_view);
         tvStatus = (TextView) itemView.findViewById(R.id.tv_online_status);
+        tvGroupName = (TextView) itemView.findViewById(R.id.tv_groupName);
     }
 
     private void changeToTitleMode() {
         ivAvatar.setVisibility(View.GONE);
         tvStatus.setVisibility(View.GONE);
+        tvUserName.setVisibility(View.GONE);
+
+        tvGroupName.setVisibility(View.VISIBLE);
     }
 
     private void changeToFriendCardMode() {
         ivAvatar.setVisibility(View.VISIBLE);
         tvStatus.setVisibility(View.VISIBLE);
+        tvUserName.setVisibility(View.VISIBLE);
+
+        tvGroupName.setVisibility(View.GONE);
     }
 
-    public void setTitle(String string) {
+    public void setGroupName(String string) {
         changeToTitleMode();
-        tvUserName.setText(string);
+        tvGroupName.setText(string);
     }
 
     public void setFriendCard(String name, Bitmap avatar, String status) {
@@ -46,6 +55,4 @@ public class FriendListCardView extends RecyclerView.ViewHolder {
         ivAvatar.setImageBitmap(avatar);
         tvStatus.setText(status);
     }
-
-
 }
