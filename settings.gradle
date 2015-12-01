@@ -1,1 +1,1 @@
-include ':app', ':MemorizingActivity'
+include ':app', ':MemorizingActivity', ':greendao'
