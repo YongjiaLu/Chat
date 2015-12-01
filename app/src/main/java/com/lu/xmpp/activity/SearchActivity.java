@@ -158,15 +158,4 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
             }
         });
     }
-
-    /**
-     * A friend delete our account
-     *
-     * @param friends friend collection
-     * @param friend  which one delete you from his friend list
-     */
-    @Override
-    public void onFriendDeleteNotice(List<Friend> friends, Friend friend) {
-
-    }
 }

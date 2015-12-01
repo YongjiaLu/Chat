@@ -140,18 +140,6 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
             }
         });
     }
-
-    /**
-     * A friend delete our account
-     *
-     * @param friends friend collection
-     * @param friend  which one delete you from his friend list
-     */
-    @Override
-    public void onFriendDeleteNotice(List<Friend> friends, Friend friend) {
-
-    }
-
     /**
      * it will be run in child thread!<br />
      * please use mhandler.post(Runanle runable) back to main thread!

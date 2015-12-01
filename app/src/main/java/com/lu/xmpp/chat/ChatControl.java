@@ -86,14 +86,6 @@ public class ChatControl {
          */
         void onNewFriendAddNotice(Presence presence, String message, String jid);
 
-        /**
-         * A friend delete our account
-         *
-         * @param friends friend collection
-         * @param friend  which one delete you from his friend list
-         */
-        // FIXME: 2015/11/26
-        void onFriendDeleteNotice(List<Friend> friends, Friend friend);
     }
 
     public void replyNewFriendNotice(Presence presence) {

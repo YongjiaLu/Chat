@@ -165,6 +165,11 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             try {
                 // don't have any group
                 mRoster.createEntry(parseFromToJid(presence.getFrom()), null, null);
+                Presence response = new Presence(Presence.Type.available);
+                response.setTo(presence.getFrom());
+                response.setFrom(presence.getTo());
+                response.setMode(Presence.Mode.available);
+                ChatService.getInstance().getConnection().sendStanza(response);
                 init();
             } catch (SmackException.NotLoggedInException e) {
                 e.printStackTrace();
@@ -473,7 +478,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
                     Presence request = new Presence(Presence.Type.subscribe);
                     request.setFrom(connection.getUser());
                     request.setTo(Jid);
-                    request.setMode(Presence.Mode.available);
                     connection.sendStanza(request);
                 } catch (SmackException.NotConnectedException e) {
                     e.printStackTrace();
