@@ -6,7 +6,6 @@ import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 
-import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Presence;
 
 import java.util.List;
@@ -47,10 +46,15 @@ public class ChatControl {
      *
      * @param listener
      */
-    public void getFriends(GetFriendListener listener) {
-        Log.e(Tag, "getFriends(GetFriendListener listener)");
+    public void startFriendObserver(GetFriendListener listener) {
+        Log.e(Tag, "Start Friend Observer");
         GetFriendsAsync async = GetFriendsAsync.getInstance();
         async.startTask(listener);
+    }
+
+    public void stopFriendObserver(GetFriendListener listener) {
+        GetFriendsAsync async = GetFriendsAsync.getInstance();
+        async.stopTask(listener);
     }
 
     public interface GetFriendListener {

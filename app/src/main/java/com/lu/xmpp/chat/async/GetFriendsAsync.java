@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.service.ChatService;
@@ -18,11 +17,11 @@ import java.util.List;
  * don't use execute(Params )<br />
  * please use startTask(ChatControl.GetFriendListener)
  */
-public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
+public class GetFriendsAsync {
 
     private static String Tag = "GetFriendsAsync";
 
-    // 10 seccond time out
+    // 10 second time out
     private final int CountDownTime = 10000;
 
     private static GetFriendsAsync mInstance;
@@ -45,26 +44,10 @@ public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
     private GetFriendsAsync() {
     }
 
-    /**
-     * Override this method to perform a computation on a background thread. The
-     * specified parameters are the parameters passed to {@link #execute}
-     * by the caller of this task.
-     * <p/>
-     * This method can call {@link #publishProgress} to publish updates
-     * on the UI thread.
-     *
-     * @param params The parameters of the task.
-     * @return A result, defined by the subclass of this task.
-     * @see #onPreExecute()
-     * @see #onPostExecute
-     * @see #publishProgress
-     */
-    @Override
-    protected List<Friend> doInBackground(Void... params) {
+    private void startObserver() {
         if (service == null) {
-            return null;
+            return;
         }
-        Log.e(Tag, "start doInBackground ");
         isRunning = true;
 
         IntentFilter intentFilter = new IntentFilter(service.BroadCast_Action_On_Receiver_Friends);
@@ -77,29 +60,25 @@ public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
 
         service.startService(intent);
 
-        int time = 0;
 
-        while (isRunning && time < CountDownTime) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
+    }
 
+    /**
+     * run in child thread, when receiver .
+     */
+    private void handleCallback() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (null != listeners && friends != null) {
+                    for (ChatControl.GetFriendListener listener : listeners) {
+                        listener.onGetFriends(friends);
+                    }
+                    // listeners.clear();
+                }
             }
-            time += 1000;
-        }
+        }).start();
 
-        service.unregisterReceiver(MyFriendsReceiver);
-
-        if (null != listeners && friends != null) {
-            for (ChatControl.GetFriendListener listener : listeners) {
-                listener.onGetFriends(friends);
-            }
-            listeners.clear();
-        }
-
-        mInstance = null;
-
-        return null;
     }
 
 
@@ -107,24 +86,39 @@ public class GetFriendsAsync extends AsyncTask<Void, Void, List<Friend>> {
         @Override
         public void onReceive(Context context, Intent intent) {
             friends = intent.getParcelableArrayListExtra(service.ParamFriendList);
-            isRunning = false;
+            handleCallback();
         }
     };
-
 
     private boolean isRunning() {
         return isRunning;
     }
 
+
+    /**
+     * add Friend Observer task , when friend status change will callback.
+     *
+     * @param listener
+     */
     public void startTask(ChatControl.GetFriendListener listener) {
         if (!isRunning()) {
             Log.e(Tag, "add listener and execute");
-            listeners.add(listener);
-            execute();
+            if (!listeners.contains(listeners))
+                listeners.add(listener);
+            startObserver();
         } else {
-            listeners.add(listener);
+            if (!listeners.contains(listeners))
+                listeners.add(listener);
             Log.e(Tag, "add listener");
         }
     }
 
+    public void stopTask(ChatControl.GetFriendListener listener) {
+        if (listeners.contains(listener)) {
+            listeners.remove(listener);
+        }
+        if (listeners == null || listeners.size() == 0) {
+            service.unregisterReceiver(MyFriendsReceiver);
+        }
+    }
 }

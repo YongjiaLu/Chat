@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class RosterFragment extends BaseFragment implements ChatControl.FriendStatusListener {
+public class RosterFragment extends BaseFragment implements ChatControl.FriendStatusListener, ChatControl.GetFriendListener {
 
     private static String Tag = "RosterFragment";
 
@@ -63,6 +63,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
         if (friends != null && friends.size() != 0) {
             showFriendList(friends);
         }
+        ChatControl.getInstance().startFriendObserver(this);
         ChatControl.getInstance().addFriendStatusListener(this);
     }
 
@@ -70,6 +71,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
     public void onPause() {
         Log.e(Tag, "onPause");
         ChatControl.getInstance().removeFriendStatusListener(this);
+        ChatControl.getInstance().stopFriendObserver(this);
         super.onPause();
     }
 
@@ -81,6 +83,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
     public void showFriendList(List<Friend> friends) {
         if (mRecyclerView == null) return;
         FriendListAdapt adapt = new FriendListAdapt(friends);
+        this.friends = friends;
         mRecyclerView.setAdapter(adapt);
     }
 
@@ -121,7 +124,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
                     @Override
                     public void onClick(View v) {
                         ChatControl.getInstance().replyNewFriendNotice(presence);
-                        ChatControl.getInstance().getFriends(new ChatControl.GetFriendListener() {
+                        ChatControl.getInstance().startFriendObserver(new ChatControl.GetFriendListener() {
                             @Override
                             public void onGetFriends(final List<Friend> friends) {
                                 getHandler().post(new Runnable() {
@@ -148,4 +151,22 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
     public void onFriendDeleteNotice(List<Friend> friends, Friend friend) {
 
     }
+
+    /**
+     * it will be run in child thread!<br />
+     * please use mhandler.post(Runanle runable) back to main thread!
+     *
+     * @param friends
+     */
+    @Override
+    public void onGetFriends(final List<Friend> friends) {
+
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                showFriendList(friends);
+            }
+        });
+    }
+
 }

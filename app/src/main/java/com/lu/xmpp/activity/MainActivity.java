@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends BaseActivity implements ChatControl.GetFriendListener {
+public class MainActivity extends BaseActivity {
 
     private static String Tag = "MainActivity";
 
@@ -69,7 +69,6 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
         viewpager.setAdapter(adapt);
         tabLayout.setTabsFromPagerAdapter(adapt);
         tabLayout.setupWithViewPager(viewpager);
-        mChatControl.getFriends(this);
     }
 
     @Override
@@ -92,24 +91,5 @@ public class MainActivity extends BaseActivity implements ChatControl.GetFriendL
                 break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onGetFriends(final List<Friend> data) {
-
-        Log.e(Tag, String.valueOf(data.size()));
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (null != rosterFragment)
-                    rosterFragment.showFriendList(data);
-            }
-        });
     }
 }

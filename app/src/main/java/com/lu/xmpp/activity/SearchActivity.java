@@ -6,7 +6,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -143,7 +142,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
                     @Override
                     public void onClick(View v) {
                         ChatControl.getInstance().replyNewFriendNotice(presence);
-                        ChatControl.getInstance().getFriends(new ChatControl.GetFriendListener() {
+                        ChatControl.getInstance().startFriendObserver(new ChatControl.GetFriendListener() {
                             @Override
                             public void onGetFriends(final List<Friend> friends) {
                                 getHandler().post(new Runnable() {

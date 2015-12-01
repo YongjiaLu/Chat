@@ -63,7 +63,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             return;
         }
         mRoster = Roster.getInstanceFor(mConnection);
-        //mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
         mRoster.addRosterLoadedListener(this);
         new Thread(new Runnable() {
             @Override
@@ -83,74 +82,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
     public void finish() {
         mRoster.removeRosterLoadedListener(this);
     }
-
-//    /**
-//     * Called when roster entries are added.
-//     *
-//     * @param addresses the XMPP addresses of the contacts that have been added to the roster.
-//     */
-//    @Override
-//    public void entriesAdded(Collection<String> addresses) {
-//        Update(addresses);
-//    }
-//
-//    /**
-//     * Called when a roster entries are updated.
-//     *
-//     * @param addresses the XMPP addresses of the contacts whose entries have been updated.
-//     */
-//    @Override
-//    public void entriesUpdated(Collection<String> addresses) {
-//        Update(addresses);
-//    }
-//
-//    private void Update(Collection<String> addresses) {
-//        if (!validateConnection()) {
-//            Log.e(Tag, "Connection Exception");
-//            return;
-//        }
-//        Roster roster = Roster.getInstanceFor(mConnection);
-//
-//        for (String address : addresses) {
-//            RosterEntry entry = roster.getEntry(address);
-//            Friend friend = parseRosterToFriend(entry, roster);
-//            if (null != friend) {
-//                for (Friend f : friends) {
-//                    if (f.getJid().equals(friend.getJid())) {
-//                        friends.remove(f);
-//                        break;
-//                    }
-//                }
-//                friends.add(friend);
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Called when a roster entries are removed.
-//     *
-//     * @param addresses the XMPP addresses of the contacts that have been removed from the roster.
-//     */
-//    @Override
-//    public void entriesDeleted(Collection<String> addresses) {
-//        if (!validateConnection()) {
-//            Log.e(Tag, "Connection Exception");
-//            return;
-//        }
-//
-//        for (String address : addresses) {
-//            Log.e(Tag, address);
-//        }
-//
-//        for (String jid : addresses) {
-//            for (Friend friend : friends) {
-//                if (jid.equals(friend.getJid())) {
-//                    friends.remove(friend);
-//                    break;
-//                }
-//            }
-//        }
-//    }
 
 
     /**
@@ -193,7 +124,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         if (presence.getType() == Presence.Type.available || presence.getType() == Presence.Type.unavailable) {
             Friend friend = null;
             for (Friend target : friends) {
-                if (target.getJid().equals(presence.getFrom().split("/")[0])) {
+                if (target.getJid().equals(parseFromToJid(presence.getFrom()))) {
                     //target
                     target.setStatus(presence.getType().toString());
                     target.setStatusLine(presence.getStatus());
@@ -209,7 +140,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         }
         if (presence.getType() == Presence.Type.subscribe) {
             //receive a friend request
-            String jid = presence.getFrom().split("/")[0] != null ? (presence.getFrom().split("/")[0]) : null;
+            String jid = parseFromToJid(presence.getFrom());
 
             if (jid == null) {
                 Log.e(Tag, "receive a error message !");
@@ -229,11 +160,12 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         // be careful ,if some send Presence.Type.subscribed to here ,anyway, our user would add a error friend
         // We need a stack to save our request and confirm it where it come from ,is from where our user request
         if (presence.getType() == Presence.Type.subscribed) {
-            Log.e(Tag,"request a subscribed!");
-            String jid = presence.getFrom().split("/")[0] != null ? (presence.getFrom().split("/")[0]) : null;
+            Log.e(Tag, "request a subscribed!");
+
             try {
                 // don't have any group
-                mRoster.createEntry(jid, null, null);
+                mRoster.createEntry(parseFromToJid(presence.getFrom()), null, null);
+                init();
             } catch (SmackException.NotLoggedInException e) {
                 e.printStackTrace();
             } catch (SmackException.NoResponseException e) {
@@ -245,6 +177,75 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             }
         }
 
+        if (presence.getType() == Presence.Type.unsubscribe) {
+            try {
+                if (deleteFriendFromJid(parseFromToJid(presence.getFrom()))) {
+                    //if delete ,use init instance mRoster.reload.
+                    String jid = parseFromToJid(presence.getFrom());
+                    Presence response = new Presence(Presence.Type.unsubscribed);
+                    response.setTo(jid);
+                    ChatService.getInstance().getConnection().sendStanza(response);
+                    init();
+                } else {
+                    //delete fault, it make be a wrong message.
+                    Log.e(Tag, "Error message.");
+                }
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotLoggedInException e) {
+                e.printStackTrace();
+            }
+        }
+        Log.e(Tag, "-----------------------------------presenceChanged-----------------------------------------");
+        showPresence(presence);
+        Log.e(Tag, "-----------------------------------presenceChanged-----------------------------------------");
+    }
+
+
+    /**
+     * Use network ,please run in child thread.
+     *
+     * @param jid
+     * @return
+     * @throws SmackException.NotConnectedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NoResponseException
+     * @throws SmackException.NotLoggedInException
+     */
+    public boolean deleteFriendFromJid(String jid) throws SmackException.NotConnectedException, XMPPException.XMPPErrorException, SmackException.NoResponseException, SmackException.NotLoggedInException {
+        RosterEntry entry = null;
+        RosterGroup targetGroup = null;
+
+        for (RosterGroup group : mRoster.getGroups()) {
+            entry = group.getEntry(jid);
+            if (entry != null && entry.getUser().equals(jid)) {
+                targetGroup = group;
+                break;
+            }
+        }
+
+        if (null == entry) {
+            entry = mRoster.getEntry(jid);
+        }
+
+        if (targetGroup != null && entry != null) {
+            targetGroup.removeEntry(entry);
+            Log.e(Tag, "Remove a entry from " + targetGroup.getName());
+            return true;
+        } else if (targetGroup == null && entry != null) {
+            mRoster.removeEntry(entry);
+            Log.e(Tag, "Remove a entry from default group");
+            return true;
+        }
+        return false;
+    }
+
+    private String parseFromToJid(String from) {
+        return from.split("/")[0] != null ? (from.split("/")[0]) : null;
     }
 
     /**
@@ -300,10 +301,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
                 return lhs.getUsername().compareTo(rhs.getUsername()) > 0 ? 1 : -1;
             }
         });
-
-        Log.e(Tag, "A new list had sort");
-
-        //sortList(friends);
 
         return friends;
     }
@@ -417,18 +414,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         Log.e(Tag, "Presence.Type=" + presence.getType());
         Log.e(Tag, "Presence.isAvailable=" + presence.isAvailable());
         Log.e(Tag, "Presence.Mode=" + presence.getMode());
-    }
-
-    private void sortList(List<Friend> friends) {
-        //Create a Sorter,online friend will be top.
-        Collections.sort(friends, new Comparator<Friend>() {
-            @Override
-            public int compare(Friend lhs, Friend rhs) {
-                if (lhs.getStatus().equals(Presence.Type.available.toString()) && !rhs.getStatus().equals(Presence.Type.available.toString()))
-                    return 5;
-                return lhs.getUsername().compareTo(rhs.getUsername()) > 0 ? 1 : -1;
-            }
-        });
     }
 
     /**
