@@ -14,6 +14,5 @@ public class ChatActivity extends BaseActivity {
         setContentView(R.layout.activity_chat);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        
     }
 }
