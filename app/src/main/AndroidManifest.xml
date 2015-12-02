@@ -73,7 +73,8 @@
         <activity
             android:name=".activity.ChatActivity"
             android:label="@string/title_activity_chat"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:launchMode="singleInstance"
+            android:theme="@style/AppTheme" />
 
     </application>
 

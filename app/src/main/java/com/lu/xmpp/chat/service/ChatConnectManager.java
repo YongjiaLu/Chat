@@ -43,7 +43,7 @@ class ChatConnectManager {
 
     public void onConnectError() {
         for (ChatConnectCallBack callBack : mChatConnectCallBacks)
-            callBack.onNetworkAble();
+            callBack.onNetworkDisable();
     }
 
 }

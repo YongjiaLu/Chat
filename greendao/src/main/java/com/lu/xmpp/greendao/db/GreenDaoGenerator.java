@@ -21,9 +21,10 @@ public class GreenDaoGenerator {
 
         Entity entity = schema.addEntity("ChatLog");
 
-        entity.addIdProperty().notNull().autoincrement().primaryKey();
         //where the message from
         entity.addStringProperty("from").notNull();
+        //where the message to
+        entity.addStringProperty("to").notNull();
         //when
         entity.addDateProperty("time");
         //isRead

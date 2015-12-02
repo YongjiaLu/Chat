@@ -13,6 +13,7 @@ import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.connect.ChatConnection;
 import com.lu.xmpp.contacts.ChatContacts;
+import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
 import com.lu.xmpp.utils.NetUtil;
 
@@ -77,6 +78,7 @@ public class ChatService extends Service {
     public void onCreate() {
         mInstance = this;
         connection = new ChatConnection(SmackDebug, ChatService.this);
+        //TODO Setting page get SubscriptionMode ( not implemented)
         Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
 
         IntentFilter filter = new IntentFilter();
@@ -126,7 +128,7 @@ public class ChatService extends Service {
                         mFriendManager = FriendManager.getInstance(connection, this);
                     }
                     try {
-                        mFriendManager.startRosterPresenceListener();
+                        mFriendManager.startRosterPresenceAndMessageListener();
                     } catch (Exception e) {
                         Log.e(Tag, e.toString());
                     }
@@ -356,6 +358,14 @@ public class ChatService extends Service {
 
     public void startAddFriend(String Jid, String Message) {
         mFriendManager.addFriend(Jid, Message);
+    }
+
+    public Friend findFriendInfoFromJid(String jid) {
+        return mFriendManager.findFriendFromList(jid);
+    }
+
+    public Friend findCurrentUserInfo() {
+        return mFriendManager.getUserInfo();
     }
 
 }

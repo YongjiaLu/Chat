@@ -25,6 +25,7 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
     public static final int TypeGroupName = 1;
     public static final int TypeFriend = 2;
 
+    private OnItemClickListener listener;
     private List friends;
 
     public FriendListAdapt(List<Friend> friends) {
@@ -57,7 +58,6 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
         return viewHolder;
     }
 
-
     @Override
     public int getItemCount() {
         return friends.size();
@@ -70,17 +70,34 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
     }
 
     @Override
-    public void onBindViewHolder(FriendListCardView holder, int position) {
-
+    public void onBindViewHolder(FriendListCardView holder, final int position) {
         int type = getItemViewType(position);
         if (type == TypeFriend) {
             Friend friend = (Friend) friends.get(position);
             holder.setFriendCard(friend.getUsername(), friend.getAvatar(), friend.getStatus().equals(Presence.Type.available.toString()) ? "online" : "offline");
+            if (null != listener)
+                holder.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        listener.onItemClick(position, (Friend) friends.get(position));
+                    }
+                });
         } else {
             String string = friends.get(position).toString();
             holder.setGroupName(string);
+            if (null != listener) {
+                holder.removeOnclickListener();
+            }
         }
+
     }
 
+    public interface OnItemClickListener {
+        void onItemClick(int Position, Friend friend);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
 }
 

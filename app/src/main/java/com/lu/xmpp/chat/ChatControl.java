@@ -5,6 +5,7 @@ import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.chat.service.ChatService;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.Log;
+import com.lu.xmpp.utils.StringUtil;
 
 import org.jivesoftware.smack.packet.Presence;
 
@@ -16,6 +17,9 @@ import java.util.List;
 public class ChatControl {
 
     private final static String Tag = "ChatControl";
+
+    public final static String Action_Receiver_Message = "com.lu.xmpp.receiver_message";
+    public final static String Param_Chat_Log = "com.lu.xmpp.receiver_log";
 
     private static ChatControl mInstance = new ChatControl();
 
@@ -99,4 +103,21 @@ public class ChatControl {
     public void startAddFriend(String Jid, String Message) {
         service.startAddFriend(Jid, Message);
     }
+
+    public String getUserJid() {
+        return StringUtil.getUserIdFromStanza(ChatService.getInstance().getConnection().getUser());
+    }
+
+    public Friend findUserFromJid(String jid) {
+        return service.findFriendInfoFromJid(jid);
+    }
+
+    public Friend findCurrentUserInfo() {
+        return service.findCurrentUserInfo();
+    }
+
+    public void sendMessageToFriend() {
+
+    }
+
 }

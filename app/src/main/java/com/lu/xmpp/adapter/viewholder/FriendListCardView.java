@@ -55,4 +55,13 @@ public class FriendListCardView extends RecyclerView.ViewHolder {
         ivAvatar.setImageBitmap(avatar);
         tvStatus.setText(status);
     }
+
+    public void setOnClickListener(View.OnClickListener listener) {
+        if (null != listener)
+            itemView.setOnClickListener(listener);
+    }
+
+    public void removeOnclickListener() {
+        itemView.setOnClickListener(null);
+    }
 }

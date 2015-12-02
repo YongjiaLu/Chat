@@ -1,20 +1,25 @@
 package com.lu.xmpp.chat.service;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Parcelable;
 
+import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.connect.ChatConnection;
+import com.lu.xmpp.database.ChatLogManager;
 import com.lu.xmpp.modle.Friend;
 import com.lu.xmpp.utils.BitmapUtil;
 import com.lu.xmpp.utils.Log;
+import com.lu.xmpp.utils.StringUtil;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.StanzaTypeFilter;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
@@ -28,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.IllegalFormatException;
 import java.util.List;
 
 /**
@@ -39,6 +46,8 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
     private static final long TIME_LIMIT_FOR_REFRESH = 1000 * 60 * 5;//5 minute
     private long lastUpdateTime = 0;
     private static String Tag = "FriendManager";
+    //user's VCard ,maybe save it to database and image save to hard disk
+    private Friend myInfo;
 
     private ChatService mService;
     private XMPPConnection mConnection;
@@ -158,7 +167,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         }
         //TODO Bug
         // be careful ,if some send Presence.Type.subscribed to here ,anyway, our user would add a error friend
-        // We need a stack to save our request and confirm it where it come from ,is from where our user request
+        // We need a stack to save our request and confirm it where it come from ,it is exits in our request stack(not implements)
         if (presence.getType() == Presence.Type.subscribed) {
             Log.e(Tag, "request a subscribed!");
 
@@ -298,6 +307,24 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             }
         }
 
+        //Get current user's VCard
+        try {
+            VCard myVCard = VCardManager.getInstanceFor(mConnection).loadVCard();
+            myInfo = new Friend();
+
+            myInfo.setAvatar(BitmapUtil.parseByteArrayToBitmap(myVCard.getAvatar(), mService));
+
+            myInfo.setUsername(myVCard.getNickName() != null ? myVCard.getNickName() : mConnection.getUser().split("@")[0]);
+
+            //TODO complete all information
+            //now just implements it for ChatLog and Chat
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
         Collections.sort(friends, new Comparator<Friend>() {
             @Override
             public int compare(Friend lhs, Friend rhs) {
@@ -360,7 +387,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
     private int registerCount = 0;
     private boolean rosterPresenceFlag = false;
 
-    public synchronized void startRosterPresenceListener() throws Exception {
+    public synchronized void startRosterPresenceAndMessageListener() throws Exception {
         if (!rosterPresenceFlag && mRoster != null) {
 
             if (registerCount == 1) throw new Exception("this method had call");
@@ -372,6 +399,7 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
                 throw new SmackException("this connection had not login");
 
             mConnection.addAsyncStanzaListener(this, StanzaTypeFilter.PRESENCE);
+            mConnection.addAsyncStanzaListener(this, StanzaTypeFilter.MESSAGE);
 
             Log.e(Tag, "-------------------------------------------------------------------");
             Log.e(Tag, "start a presence listener ,Register Counter=" + ++registerCount);
@@ -439,23 +467,6 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         }
     }
 
-    /**
-     * Process the next stanza(/packet) sent to this stanza(/packet) listener.
-     * <p>
-     * A single thread is responsible for invoking all listeners, so
-     * it's very important that implementations of this method not block
-     * for any extended period of time.
-     * </p>
-     *
-     * @param packet the stanza(/packet) to process.
-     */
-    @Override
-    public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
-        if (packet instanceof Presence) {
-            Presence presence = (Presence) packet;
-            presenceChanged(presence);
-        }
-    }
 
     public void searchFriend(SearchFriendsAsync.SearchFriendCallBack callBack, String... byName) {
         new SearchFriendsAsync(callBack).execute(byName);
@@ -511,5 +522,68 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         }
     }
 
+    public Friend findFriendFromList(String jid) {
+
+        for (Friend friend : friends) {
+            if (friend.getJid().equals(jid)) {
+                return friend;
+            }
+        }
+        return null;
+    }
+
+    public Friend getUserInfo() {
+        return myInfo;
+    }
+
+    /**
+     * Process the next stanza(/packet) sent to this stanza(/packet) listener.
+     * <p>
+     * A single thread is responsible for invoking all listeners, so
+     * it's very important that implementations of this method not block
+     * for any extended period of time.
+     * </p>
+     *
+     * @param packet the stanza(/packet) to process.
+     */
+    @Override
+    public void processPacket(Stanza packet) throws SmackException.NotConnectedException {
+        if (packet instanceof Presence) {
+            Presence presence = (Presence) packet;
+            presenceChanged(presence);
+        }
+
+        if (packet instanceof Message) {
+            Message message = (Message) packet;
+            if (message.getBody() == null || message.getBody().trim().equals("")) return;
+            handMessage(message);
+        }
+    }
+
+    public void handMessage(Message message) {
+        ChatLogManager chatLogManager = ChatLogManager.getInstance(mService, StringUtil.getUserIdFromStanza(mConnection.getUser()));
+        ChatLog log = new ChatLog();
+        log.setBody(message.getBody());
+        log.setFrom(StringUtil.getUserIdFromStanza(message.getFrom()));
+        log.setTo(StringUtil.getUserIdFromStanza(message.getTo() == null ? StringUtil.getUserIdFromStanza(mConnection.getUser()) : message.getTo()));
+        log.setIsRead(false);
+        log.setTime(new Date(System.currentTimeMillis()));
+        ShowMessage(message);
+        chatLogManager.addLog(log);
+
+        Intent intent = new Intent(ChatControl.Action_Receiver_Message);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(ChatControl.Param_Chat_Log, log);
+        intent.putExtras(bundle);
+        mService.sendBroadcast(intent);
+    }
+
+    private void ShowMessage(Message message) {
+        Log.e(Tag, "----------------------------------------ShowMessage----------------------------------------");
+        Log.e(Tag, "Message To=" + message.getTo());
+        Log.e(Tag, "Message Body=" + message.getBody());
+        Log.e(Tag, "Message From=" + message.getFrom());
+        Log.e(Tag, "----------------------------------------ShowMessage----------------------------------------");
+    }
 
 }

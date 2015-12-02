@@ -14,7 +14,7 @@ import com.lu.xmpp.bean.ChatLog;
 /** 
  * DAO for table "CHAT_LOG".
 */
-public class ChatLogDao extends AbstractDao<ChatLog, Long> {
+public class ChatLogDao extends AbstractDao<ChatLog, Void> {
 
     public static final String TABLENAME = "CHAT_LOG";
 
@@ -23,8 +23,8 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
      * Can be used for QueryBuilder and for referencing column names.
     */
     public static class Properties {
-        public final static Property Id = new Property(0, long.class, "id", true, "_id");
-        public final static Property From = new Property(1, String.class, "from", false, "FROM");
+        public final static Property From = new Property(0, String.class, "from", false, "FROM");
+        public final static Property To = new Property(1, String.class, "to", false, "TO");
         public final static Property Time = new Property(2, java.util.Date.class, "time", false, "TIME");
         public final static Property IsRead = new Property(3, Boolean.class, "isRead", false, "IS_READ");
         public final static Property Body = new Property(4, String.class, "body", false, "BODY");
@@ -43,8 +43,8 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
     public static void createTable(SQLiteDatabase db, boolean ifNotExists) {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"CHAT_LOG\" (" + //
-                "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ," + // 0: id
-                "\"FROM\" TEXT NOT NULL ," + // 1: from
+                "\"FROM\" TEXT NOT NULL ," + // 0: from
+                "\"TO\" TEXT NOT NULL ," + // 1: to
                 "\"TIME\" INTEGER," + // 2: time
                 "\"IS_READ\" INTEGER," + // 3: isRead
                 "\"BODY\" TEXT);"); // 4: body
@@ -60,8 +60,8 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
     @Override
     protected void bindValues(SQLiteStatement stmt, ChatLog entity) {
         stmt.clearBindings();
-        stmt.bindLong(1, entity.getId());
-        stmt.bindString(2, entity.getFrom());
+        stmt.bindString(1, entity.getFrom());
+        stmt.bindString(2, entity.getTo());
  
         java.util.Date time = entity.getTime();
         if (time != null) {
@@ -81,16 +81,16 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
 
     /** @inheritdoc */
     @Override
-    public Long readKey(Cursor cursor, int offset) {
-        return cursor.getLong(offset + 0);
+    public Void readKey(Cursor cursor, int offset) {
+        return null;
     }    
 
     /** @inheritdoc */
     @Override
     public ChatLog readEntity(Cursor cursor, int offset) {
         ChatLog entity = new ChatLog( //
-            cursor.getLong(offset + 0), // id
-            cursor.getString(offset + 1), // from
+            cursor.getString(offset + 0), // from
+            cursor.getString(offset + 1), // to
             cursor.isNull(offset + 2) ? null : new java.util.Date(cursor.getLong(offset + 2)), // time
             cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0, // isRead
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4) // body
@@ -101,8 +101,8 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
     /** @inheritdoc */
     @Override
     public void readEntity(Cursor cursor, ChatLog entity, int offset) {
-        entity.setId(cursor.getLong(offset + 0));
-        entity.setFrom(cursor.getString(offset + 1));
+        entity.setFrom(cursor.getString(offset + 0));
+        entity.setTo(cursor.getString(offset + 1));
         entity.setTime(cursor.isNull(offset + 2) ? null : new java.util.Date(cursor.getLong(offset + 2)));
         entity.setIsRead(cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0);
         entity.setBody(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
@@ -110,19 +110,15 @@ public class ChatLogDao extends AbstractDao<ChatLog, Long> {
     
     /** @inheritdoc */
     @Override
-    protected Long updateKeyAfterInsert(ChatLog entity, long rowId) {
-        entity.setId(rowId);
-        return rowId;
+    protected Void updateKeyAfterInsert(ChatLog entity, long rowId) {
+        // Unsupported or missing PK type
+        return null;
     }
     
     /** @inheritdoc */
     @Override
-    public Long getKey(ChatLog entity) {
-        if(entity != null) {
-            return entity.getId();
-        } else {
-            return null;
-        }
+    public Void getKey(ChatLog entity) {
+        return null;
     }
 
     /** @inheritdoc */

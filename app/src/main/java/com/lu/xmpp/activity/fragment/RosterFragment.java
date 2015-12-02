@@ -1,5 +1,6 @@
 package com.lu.xmpp.activity.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.lu.xmpp.R;
+import com.lu.xmpp.activity.ChatActivity;
 import com.lu.xmpp.activity.base.BaseActivity;
 import com.lu.xmpp.activity.base.BaseFragment;
 import com.lu.xmpp.adapter.FriendListAdapt;
@@ -26,7 +28,7 @@ import java.util.List;
 /**
  * Created by xuyu on 2015/11/17.
  */
-public class RosterFragment extends BaseFragment implements ChatControl.FriendStatusListener, ChatControl.GetFriendListener {
+public class RosterFragment extends BaseFragment implements ChatControl.FriendStatusListener, ChatControl.GetFriendListener, FriendListAdapt.OnItemClickListener {
 
     private static String Tag = "RosterFragment";
 
@@ -83,6 +85,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
     public void showFriendList(List<Friend> friends) {
         if (mRecyclerView == null) return;
         FriendListAdapt adapt = new FriendListAdapt(friends);
+        adapt.setOnItemClickListener(this);
         this.friends = friends;
         mRecyclerView.setAdapter(adapt);
     }
@@ -140,6 +143,7 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
             }
         });
     }
+
     /**
      * it will be run in child thread!<br />
      * please use mhandler.post(Runanle runable) back to main thread!
@@ -157,4 +161,16 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
         });
     }
 
+    @Override
+    public void onItemClick(int Position, final Friend friend) {
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(getContext(), ChatActivity.class);
+                intent.putExtra(ChatActivity.PARAM_FRIEND_JID, friend.getJid());
+                startActivity(intent);
+
+            }
+        });
+    }
 }
