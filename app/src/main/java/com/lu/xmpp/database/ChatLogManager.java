@@ -5,6 +5,7 @@ import android.content.Context;
 import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.dao.ChatLogDao;
 import com.lu.xmpp.dao.DaoMaster;
+import com.lu.xmpp.utils.Log;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ import de.greenrobot.dao.query.QueryBuilder;
  * Created by xuyu on 2015/12/1.
  */
 public class ChatLogManager {
+
+    private static final String Tag = "ChatLogManager";
 
     private String DB_NAME = "ChatLog";
 
@@ -50,6 +53,7 @@ public class ChatLogManager {
      * @param chatLog
      */
     public void addLog(ChatLog chatLog) {
+        Log.e(Tag, "a message send from " + chatLog.getFrom() + " to " + chatLog.getTo());
         getChatLogDao().insert(chatLog);
     }
 
@@ -60,12 +64,22 @@ public class ChatLogManager {
      * @return
      */
     public List<ChatLog> getChatLogFromJid(String jid) {
+
+        Log.e(Tag, "list message! friendJid= " + jid + "//// userJid= " + username);
+
         ChatLogDao chatLogDao = getChatLogDao();
+
         QueryBuilder builder = chatLogDao.queryBuilder();
-        builder.where(ChatLogDao.Properties.From.eq(jid), ChatLogDao.Properties.To.eq(username));
-        builder.or(ChatLogDao.Properties.From.eq(username), ChatLogDao.Properties.To.eq(jid));
+
+        builder.whereOr(ChatLogDao.Properties.From.eq(jid), ChatLogDao.Properties.To.eq(jid));
+
         builder.orderAsc(ChatLogDao.Properties.Time);
-        return builder.build().list();
+
+        List<ChatLog> list = builder.build().list();
+
+        Log.e(Tag, jid + " log size= " + list.size());
+
+        return list;
     }
 
     /**
@@ -107,5 +121,24 @@ public class ChatLogManager {
     public void signMessageRead(ChatLog chatLog) {
         chatLog.setIsRead(true);
         getChatLogDao().update(chatLog);
+    }
+
+    public void showLog(ChatLog log) {
+
+        Log.e(Tag, "-----------------------------------Show ChatLog --------------------------------------");
+
+        Log.e(Tag, "message from :" + log.getFrom());
+
+        Log.e(Tag, "message to :" + log.getTo());
+
+        Log.e(Tag, "message time  :" + log.getTime().toString());
+
+        Log.e(Tag, "message body  :" + log.getBody());
+
+        Log.e(Tag, "-----------------------------------Show ChatLog --------------------------------------");
+    }
+
+    public List<ChatLog> getAllLog() {
+        return getChatLogDao().loadAll();
     }
 }

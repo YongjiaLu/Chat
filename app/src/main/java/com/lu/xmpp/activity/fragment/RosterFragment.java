@@ -152,7 +152,6 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
      */
     @Override
     public void onGetFriends(final List<Friend> friends) {
-
         getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -169,7 +168,6 @@ public class RosterFragment extends BaseFragment implements ChatControl.FriendSt
                 Intent intent = new Intent(getContext(), ChatActivity.class);
                 intent.putExtra(ChatActivity.PARAM_FRIEND_JID, friend.getJid());
                 startActivity(intent);
-
             }
         });
     }

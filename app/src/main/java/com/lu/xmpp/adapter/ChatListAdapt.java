@@ -11,6 +11,7 @@ import com.lu.xmpp.R;
 import com.lu.xmpp.adapter.viewholder.ChatListCardVew;
 import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.chat.ChatControl;
+import com.lu.xmpp.modle.Friend;
 
 import java.util.List;
 
@@ -20,8 +21,8 @@ import java.util.List;
 public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
 
 
-    private Bitmap friendAvatar;
-    private Bitmap userAvatar;
+    private Friend friendInfo;
+    private Friend userInfo;
 
     public static final int TypeMessageComing = 1;
     public static final int TypeMessageGoing = 2;
@@ -29,10 +30,10 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
     private List<ChatLog> logs;
 
 
-    public ChatListAdapt(List<ChatLog> logs, Bitmap friendAvatar, Bitmap userAvatar) {
+    public ChatListAdapt(List<ChatLog> logs, Friend friendInfo, Friend userInfo) {
         this.logs = logs;
-        this.friendAvatar = friendAvatar;
-        this.userAvatar = userAvatar;
+        this.friendInfo = friendInfo;
+        this.userInfo = userInfo;
     }
 
 
@@ -95,8 +96,10 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
     @Override
     public void onBindViewHolder(ChatListCardVew holder, int position) {
         ChatLog log = logs.get(position);
-        holder.setAvatar(getItemViewType(position) == TypeMessageComing ? friendAvatar : userAvatar);
+        holder.setAvatar(getItemViewType(position) == TypeMessageComing ? friendInfo.getAvatar() : userInfo.getAvatar());
         holder.setBody(log.getBody());
+        holder.setUserName(getItemViewType(position) == TypeMessageComing ? friendInfo.getUsername() : userInfo.getUsername());
+        holder.setDate(log.getTime());
     }
 
     /**

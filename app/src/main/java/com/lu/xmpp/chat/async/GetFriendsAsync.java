@@ -114,6 +114,7 @@ public class GetFriendsAsync {
     }
 
     public void stopTask(ChatControl.GetFriendListener listener) {
+        isRunning = false;
         if (listeners.contains(listener)) {
             listeners.remove(listener);
         }

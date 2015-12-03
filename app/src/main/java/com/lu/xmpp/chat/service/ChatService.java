@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 
+import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.chat.ChatConnectCallBack;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
@@ -366,6 +367,10 @@ public class ChatService extends Service {
 
     public Friend findCurrentUserInfo() {
         return mFriendManager.getUserInfo();
+    }
+
+    public void sendMessage(ChatLog log) {
+        mFriendManager.sendMessage(log);
     }
 
 }

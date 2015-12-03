@@ -1,5 +1,6 @@
 package com.lu.xmpp.chat;
 
+import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.chat.async.GetFriendsAsync;
 import com.lu.xmpp.chat.async.SearchFriendsAsync;
 import com.lu.xmpp.chat.service.ChatService;
@@ -116,8 +117,8 @@ public class ChatControl {
         return service.findCurrentUserInfo();
     }
 
-    public void sendMessageToFriend() {
-
+    public void sendMessageToFriend(ChatLog log) {
+        service.sendMessage(log);
     }
 
 }

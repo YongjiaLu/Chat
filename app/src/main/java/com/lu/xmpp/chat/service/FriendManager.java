@@ -18,6 +18,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
@@ -310,11 +311,14 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         //Get current user's VCard
         try {
             VCard myVCard = VCardManager.getInstanceFor(mConnection).loadVCard();
+
             myInfo = new Friend();
 
             myInfo.setAvatar(BitmapUtil.parseByteArrayToBitmap(myVCard.getAvatar(), mService));
 
             myInfo.setUsername(myVCard.getNickName() != null ? myVCard.getNickName() : mConnection.getUser().split("@")[0]);
+
+            myInfo.setJid(StringUtil.getUserIdFromStanza(mConnection.getUser()));
 
             //TODO complete all information
             //now just implements it for ChatLog and Chat
@@ -398,8 +402,23 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             if (!mConnection.isAuthenticated())
                 throw new SmackException("this connection had not login");
 
-            mConnection.addAsyncStanzaListener(this, StanzaTypeFilter.PRESENCE);
-            mConnection.addAsyncStanzaListener(this, StanzaTypeFilter.MESSAGE);
+
+            StanzaFilter filter = new StanzaFilter() {
+                @Override
+                public boolean accept(Stanza stanza) {
+                    if (stanza instanceof Message) {
+                        return true;
+                    }
+
+                    if (stanza instanceof Presence) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            };
+
+            mConnection.addAsyncStanzaListener(this, filter);
 
             Log.e(Tag, "-------------------------------------------------------------------");
             Log.e(Tag, "start a presence listener ,Register Counter=" + ++registerCount);
@@ -420,34 +439,12 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             if (!mConnection.isAuthenticated())
                 throw new SmackException("this connection had not login");
 
-            mConnection.removeAsyncStanzaListener(this);
+            mConnection.removeSyncStanzaListener(this);
 
             rosterPresenceFlag = false;
         }
     }
 
-
-    /**
-     * show a iq of presence
-     *
-     * @param presence
-     */
-    public static boolean debug = false;
-
-    public void showEntry(RosterEntry entry) {
-        Log.e(Tag, "RosterEntry.User=" + entry.getUser());
-        Log.e(Tag, "RosterEntry.States=" + entry.getStatus());
-        Log.e(Tag, "RosterEntry.Type=" + entry.getType());
-        Log.e(Tag, "RosterEntry.Name=" + entry.getName());
-    }
-
-    public void showPresence(Presence presence) {
-        Log.e(Tag, "Presence.User=" + presence.getFrom());
-        Log.e(Tag, "Presence.States=" + presence.getStatus());
-        Log.e(Tag, "Presence.Type=" + presence.getType());
-        Log.e(Tag, "Presence.isAvailable=" + presence.isAvailable());
-        Log.e(Tag, "Presence.Mode=" + presence.getMode());
-    }
 
     /**
      * use XmppConnection.addStanzaFilter to get callback
@@ -576,6 +573,47 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
         bundle.putSerializable(ChatControl.Param_Chat_Log, log);
         intent.putExtras(bundle);
         mService.sendBroadcast(intent);
+    }
+
+    public void sendMessage(final ChatLog log) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Message message = new Message(log.getTo(), log.getBody());
+                message.setType(Message.Type.chat);
+                message.setFrom(log.getFrom());
+                ChatLogManager chatLogManager = ChatLogManager.getInstance(mService, StringUtil.getUserIdFromStanza(mConnection.getUser()));
+                try {
+                    mConnection.sendStanza(message);
+                    chatLogManager.showLog(log);
+                    chatLogManager.addLog(log);
+                } catch (SmackException.NotConnectedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * show a iq of presence
+     *
+     * @param presence
+     */
+    public static boolean debug = false;
+
+    public void showEntry(RosterEntry entry) {
+        Log.e(Tag, "RosterEntry.User=" + entry.getUser());
+        Log.e(Tag, "RosterEntry.States=" + entry.getStatus());
+        Log.e(Tag, "RosterEntry.Type=" + entry.getType());
+        Log.e(Tag, "RosterEntry.Name=" + entry.getName());
+    }
+
+    public void showPresence(Presence presence) {
+        Log.e(Tag, "Presence.User=" + presence.getFrom());
+        Log.e(Tag, "Presence.States=" + presence.getStatus());
+        Log.e(Tag, "Presence.Type=" + presence.getType());
+        Log.e(Tag, "Presence.isAvailable=" + presence.isAvailable());
+        Log.e(Tag, "Presence.Mode=" + presence.getMode());
     }
 
     private void ShowMessage(Message message) {
