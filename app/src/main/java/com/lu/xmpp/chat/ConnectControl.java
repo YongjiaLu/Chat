@@ -27,6 +27,7 @@ public class ConnectControl {
         service = ChatService.getInstance();
         return mInstance;
     }
+
     /**
      * 是否连接上服务器
      */

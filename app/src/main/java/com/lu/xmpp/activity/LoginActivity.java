@@ -84,7 +84,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     protected void onPause() {
-        connectControl.addConnectCallBack(this);
+        if (connectControl.isConnected())
+            connectControl.removeConnectCallback(this);
         super.onPause();
     }
 

@@ -13,7 +13,6 @@ import com.lu.xmpp.R;
  */
 public class FriendListCardView extends RecyclerView.ViewHolder {
 
-
     private TextView tvUserName;
     private ImageView ivAvatar;
     private TextView tvStatus;

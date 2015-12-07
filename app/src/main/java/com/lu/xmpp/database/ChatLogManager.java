@@ -5,6 +5,7 @@ import android.content.Context;
 import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.dao.ChatLogDao;
 import com.lu.xmpp.dao.DaoMaster;
+import com.lu.xmpp.dao.DaoSession;
 import com.lu.xmpp.utils.Log;
 
 import java.util.List;
@@ -27,6 +28,10 @@ public class ChatLogManager {
 
     private String username;
 
+    private DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, DB_NAME, null);
+
+    private DaoMaster master = new DaoMaster(helper.getWritableDatabase());
+
     private ChatLogManager(Context context, String username) {
         this.context = context.getApplicationContext();
         this.username = username;
@@ -42,10 +47,8 @@ public class ChatLogManager {
      *
      * @return
      */
-    private ChatLogDao getChatLogDao() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, DB_NAME, null);
-        DaoMaster master = new DaoMaster(helper.getWritableDatabase());
-        return master.newSession().getChatLogDao();
+    private DaoSession getSession() {
+        return master.newSession();
     }
 
 
@@ -54,7 +57,9 @@ public class ChatLogManager {
      */
     public void addLog(ChatLog chatLog) {
         Log.e(Tag, "a message send from " + chatLog.getFrom() + " to " + chatLog.getTo());
-        getChatLogDao().insert(chatLog);
+        DaoSession session = getSession();
+        ChatLogDao dao = session.getChatLogDao();
+        dao.insert(chatLog);
     }
 
     /**
@@ -67,7 +72,7 @@ public class ChatLogManager {
 
         Log.e(Tag, "list message! friendJid= " + jid + "//// userJid= " + username);
 
-        ChatLogDao chatLogDao = getChatLogDao();
+        ChatLogDao chatLogDao = getSession().getChatLogDao();
 
         QueryBuilder builder = chatLogDao.queryBuilder();
 
@@ -88,7 +93,7 @@ public class ChatLogManager {
      * @param jid
      */
     public void deleteLogFromJid(String jid) {
-        ChatLogDao chatLogDao = getChatLogDao();
+        ChatLogDao chatLogDao = getSession().getChatLogDao();
         DeleteQuery deleteQuery = chatLogDao.queryBuilder().where(ChatLogDao.Properties.From.eq(jid)).buildDelete();
         deleteQuery.executeDeleteWithoutDetachingEntities();
     }
@@ -99,7 +104,7 @@ public class ChatLogManager {
      * @return
      */
     public long getUnReadMessageCount() {
-        ChatLogDao chatLogDao = getChatLogDao();
+        ChatLogDao chatLogDao = getSession().getChatLogDao();
         return chatLogDao.queryBuilder().where(ChatLogDao.Properties.IsRead.eq(false)).count();
     }
 
@@ -110,7 +115,7 @@ public class ChatLogManager {
      * @return
      */
     public long getUnReadMessageCountFromJid(String jid) {
-        return getChatLogDao().queryBuilder().where(ChatLogDao.Properties.IsRead.eq(false), ChatLogDao.Properties.From.eq(jid)).count();
+        return getSession().getChatLogDao().queryBuilder().where(ChatLogDao.Properties.IsRead.eq(false), ChatLogDao.Properties.From.eq(jid)).count();
     }
 
     /**
@@ -120,7 +125,7 @@ public class ChatLogManager {
      */
     public void signMessageRead(ChatLog chatLog) {
         chatLog.setIsRead(true);
-        getChatLogDao().update(chatLog);
+        getSession().getChatLogDao().update(chatLog);
     }
 
     public void showLog(ChatLog log) {
@@ -139,6 +144,6 @@ public class ChatLogManager {
     }
 
     public List<ChatLog> getAllLog() {
-        return getChatLogDao().loadAll();
+        return getSession().getChatLogDao().loadAll();
     }
 }

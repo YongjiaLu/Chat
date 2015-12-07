@@ -1,6 +1,5 @@
 package com.lu.xmpp.adapter;
 
-import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +11,7 @@ import com.lu.xmpp.adapter.viewholder.ChatListCardVew;
 import com.lu.xmpp.bean.ChatLog;
 import com.lu.xmpp.chat.ChatControl;
 import com.lu.xmpp.modle.Friend;
+import com.lu.xmpp.utils.Log;
 
 import java.util.List;
 
@@ -19,7 +19,6 @@ import java.util.List;
  * Created by xuyu on 2015/12/2.
  */
 public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
-
 
     private Friend friendInfo;
     private Friend userInfo;
@@ -70,6 +69,7 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
 
         ChatListCardVew cardVew = new ChatListCardVew(view);
 
+
         return cardVew;
     }
 
@@ -100,6 +100,18 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
         holder.setBody(log.getBody());
         holder.setUserName(getItemViewType(position) == TypeMessageComing ? friendInfo.getUsername() : userInfo.getUsername());
         holder.setDate(log.getTime());
+
+        int lastOneType = 0;
+
+        if (position >= 1) {
+            lastOneType = getItemViewType(position - 1);
+        }
+
+        if (lastOneType == getItemViewType(position)) {
+            holder.dismissDateAndAvatarAndUserName();
+        } else {
+            holder.showDataAndAvatarAndUserName();
+        }
     }
 
     /**
@@ -115,6 +127,7 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
 
     @Override
     public int getItemViewType(int position) {
+
         return logs.get(position).getFrom().equals(ChatControl.getInstance().getUserJid()) ? TypeMessageGoing : TypeMessageComing;
     }
 
@@ -124,6 +137,7 @@ public class ChatListAdapt extends RecyclerView.Adapter<ChatListCardVew> {
     }
 
     public int getLastPosition() {
-        return logs.size() - 1;
+        return logs.size() - 1 <= 0 ? 0 : logs.size() - 1;
     }
+
 }

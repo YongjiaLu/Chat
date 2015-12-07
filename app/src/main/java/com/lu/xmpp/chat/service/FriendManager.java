@@ -1,6 +1,7 @@
 package com.lu.xmpp.chat.service;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
 
@@ -19,7 +20,6 @@ import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.StanzaFilter;
-import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.IllegalFormatException;
 import java.util.List;
 
 /**
@@ -365,7 +364,10 @@ class FriendManager implements RosterLoadedListener, StanzaListener {
             }
             //From VCard
             friend.setJid(entry.getUser());
-            friend.setAvatar(BitmapUtil.parseByteArrayToBitmap(vCard.getAvatar(), mService));
+            Bitmap avatar = BitmapUtil.parseByteArrayToBitmap(vCard.getAvatar(), mService);
+            if (!presence.isAvailable())
+                avatar = BitmapUtil.handleImagePixelsGrayPhoto(avatar);
+            friend.setAvatar(avatar);
             friend.setUsername(vCard.getNickName() != null ? vCard.getNickName() : entry.getUser().split("@")[0]);
 
             friend.setGroupName(Group);

@@ -49,4 +49,16 @@ public class ChatListCardVew extends RecyclerView.ViewHolder {
         tvDate.setText(sfg.format(date));
     }
 
+    public void dismissDateAndAvatarAndUserName() {
+        ivAvatar.setVisibility(View.INVISIBLE);
+        tvDate.setVisibility(View.GONE);
+        tvUserName.setVisibility(View.INVISIBLE);
+    }
+
+    public void showDataAndAvatarAndUserName() {
+        ivAvatar.setVisibility(View.VISIBLE);
+        tvDate.setVisibility(View.VISIBLE);
+        tvUserName.setVisibility(View.VISIBLE);
+    }
+
 }

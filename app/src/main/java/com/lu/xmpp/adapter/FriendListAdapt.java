@@ -12,6 +12,8 @@ import com.lu.xmpp.modle.Friend;
 import org.jivesoftware.smack.packet.Presence;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
     }
 
     private List<Friend> handleData(List<Friend> friends) {
+
         Map<String, List<Friend>> map = new HashMap<>();
         for (Friend friend : friends) {
             if (!map.containsKey(friend.getGroupName()))
@@ -41,6 +44,10 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
         }
         Set<Map.Entry<String, List<Friend>>> entrySet = map.entrySet();
         List list = new ArrayList();
+        for (Map.Entry<String, List<Friend>> entry : entrySet) {
+            Collections.sort(entry.getValue(), mComparator);
+        }
+
         for (Map.Entry entry : entrySet) {
             list.add(entry.getKey().toString());
             List<Friend> group = (List<Friend>) entry.getValue();
@@ -99,5 +106,20 @@ public class FriendListAdapt extends RecyclerView.Adapter<FriendListCardView> {
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
+
+    private Comparator mComparator = new Comparator<Friend>() {
+        @Override
+        public int compare(Friend lhs, Friend rhs) {
+            int weight = 0;
+
+            if (lhs.getStatus().equals(Presence.Type.available.toString())) {
+                weight += 5;
+            }
+            if (rhs.getStatus().equals(Presence.Type.available.toString())) {
+                weight -= 5;
+            }
+            return weight + lhs.getUsername().compareTo(rhs.getUsername());
+        }
+    };
 }
 
